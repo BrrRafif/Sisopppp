@@ -788,3 +788,859 @@ while (1) {
 - **case 3** -> Dibuat untuk membuat report.
 
 3. Hasil dari sorting.
+
+## task 3 (Agil)
+#### Kode
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <pthread.h>
+#include <ctype.h>
+#include <time.h>
+#include <fcntl.h>
+
+#define MAX_MANHWA 4
+#define MAX_BUFFER 4096
+#define MAX_PATH 1024
+#define MAX_FILENAME 256
+
+typedef struct {
+    char *title;
+    char *heroine_name;
+    int id;
+    char *image_urls;
+    int release_month; 
+} ManhwaInfo;
+
+typedef struct {
+    char *manhwa_name;
+    char *heroine_name;
+    int id;
+    char *image_url;
+    int num_images;
+} DownloadTask;
+
+ManhwaInfo manhwa_list[MAX_MANHWA] = {
+    { // Lia
+        .title = "Mistaken as the Monster Duke's Wife",
+        .heroine_name = "Lia",
+        .id = 168827,
+        .image_urls = "https://i.pinimg.com/736x/cc/88/fc/cc88fc7520e11783dccbf081dcf5293d.jpg",
+        .release_month = 0
+    },
+    { // Tia
+        .title = "The Villainess Lives Again", 
+        .heroine_name = "Tia", 
+        .id = 147205,
+        .image_urls = "https://i.pinimg.com/736x/f4/02/2c/f4022c1333fcd4f9bc015433a26e9a21.jpg",
+        .release_month = 0
+    },
+    { // Adelia
+        .title = "No, I Only Charmed the Princess!", 
+        .heroine_name = "Adelia", 
+        .id = 169731,
+        .image_urls = "https://i.pinimg.com/736x/43/d6/72/43d672d7e05e96a234071beb02ee4d58.jpg",
+        .release_month = 0
+    },
+    { // Lizen
+        .title = "Darling, Why Can't We Divorce?", 
+        .heroine_name = "Lizen", 
+        .id = 175521,
+        .image_urls = "https://i.pinimg.com/736x/6f/b1/bc/6fb1bc43cb83e70c2627a4405300b7ae.jpg",
+        .release_month = 0
+    }
+};
+
+void format_filename(char *str) {
+    char temp[MAX_FILENAME] = {0};
+    int j = 0;
+    for (int i = 0; str[i] && j < MAX_FILENAME - 1; i++) {
+        if (str[i] == ' ') {
+            temp[j++] = '_';
+        } else if (isalnum(str[i]) || str[i] == '_') {
+            temp[j++] = str[i];
+        }
+    }
+    temp[j] = '\0';
+    strncpy(str, temp, MAX_FILENAME);
+}
+
+void get_uppercase_manhwa_name(const char *manhwa_name, char *result) {
+    char temp[MAX_FILENAME];
+    strncpy(temp, manhwa_name, MAX_FILENAME - 1);
+    temp[MAX_FILENAME - 1] = '\0';
+    format_filename(temp);
+    int j = 0;
+    for (int i = 0; temp[i] && j < MAX_FILENAME - 1; i++) {
+        if (isupper(temp[i])) {
+            result[j++] = temp[i];
+        }
+    }
+    result[j] = '\0';
+}
+
+
+void create_dir(const char *path) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        execlp("mkdir", "mkdir", "-p", path, NULL);
+        exit(EXIT_FAILURE);
+    } else {
+        wait(NULL);
+    }
+}
+
+void fetch_manhwa_data(int id, const char *title) {
+    char filename[MAX_FILENAME];
+    strncpy(filename, title, MAX_FILENAME - 1);
+    filename[MAX_FILENAME - 1] = '\0';
+    format_filename(filename);
+    
+    char path[MAX_PATH];
+    snprintf(path, MAX_PATH, "Manhwa/%s.txt", filename);
+    
+    pid_t pid = fork();
+    if (pid == 0) {
+        char api_url[MAX_PATH];
+        snprintf(api_url, MAX_PATH, "https://api.jikan.moe/v4/manga/%d", id);
+        
+        char command[MAX_BUFFER];
+        snprintf(command, MAX_BUFFER, 
+                "curl -s \"%s\" | jq -r '["
+                ".data.title // \"N/A\", "
+                ".data.status // \"N/A\", "
+                "(.data.published.from // \"N/A\" | split(\"T\")[0]), "
+                "((.data.genres // []) | map(.name) | join(\", \") // \"N/A\"), "
+                "((.data.themes // []) | map(.name) | join(\", \") // \"N/A\"), "
+                "((.data.authors // []) | map(.name) | join(\", \") // \"N/A\")] | "
+                "join(\"\\n\")' > \"%s\"", 
+                api_url, path);
+        execlp("sh", "sh", "-c", command, NULL);
+        exit(EXIT_FAILURE);
+    } else {
+        wait(NULL);
+        FILE *file = fopen(path, "r+");
+        if (file) {
+            char content[MAX_BUFFER] = {0};
+            size_t bytes_read = fread(content, 1, MAX_BUFFER - 1, file);
+            content[bytes_read] = '\0';
+            char *lines[6] = {0};
+            char *token = strtok(content, "\n");
+            int i = 0;
+            while (token && i < 6) {
+                lines[i++] = token;
+                token = strtok(NULL, "\n");
+            }
+            rewind(file);
+            fprintf(file, "Title: %s\n", lines[0] ? lines[0] : "N/A");
+            fprintf(file, "Status: %s\n", lines[1] ? lines[1] : "N/A");
+            fprintf(file, "Release: %s\n", lines[2] ? lines[2] : "N/A");
+            fprintf(file, "Genre: %s\n", lines[3] ? lines[3] : "N/A");
+            fprintf(file, "Theme: %s\n", lines[4] ? lines[4] : "N/A");
+            fprintf(file, "Author: %s\n", lines[5] ? lines[5] : "N/A");
+            fclose(file);
+        }
+    }
+}
+
+void zip_text_files() {
+    create_dir("Archive");
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir("Manhwa")) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            if (strstr(ent->d_name, ".txt")) {
+                char filename[MAX_FILENAME];
+                strncpy(filename, ent->d_name, MAX_FILENAME - 1);
+                filename[MAX_FILENAME - 1] = '\0';
+                char *dot = strrchr(filename, '.');
+                if (dot) *dot = '\0';
+                char uppercase[MAX_FILENAME];
+                get_uppercase_manhwa_name(filename, uppercase);
+                char src_path[MAX_PATH];
+                snprintf(src_path, MAX_PATH, "Manhwa/%s", ent->d_name);
+                char dest_path[MAX_PATH];
+                snprintf(dest_path, MAX_PATH, "Archive/%s.zip", uppercase);
+                pid_t pid = fork();
+                if (pid == 0) {
+                    execlp("zip", "zip", "-j", dest_path, src_path, NULL);
+                    exit(EXIT_FAILURE);
+                } else {
+                    wait(NULL);
+                }
+            }
+        }
+        closedir(dir);
+    }
+}
+
+
+// Fungsi untuk ekstrak bulan dari tanggal
+int extract_month_from_date(const char *date_str) {
+    if (!date_str || strcmp(date_str, "N/A") == 0) {
+        printf("WARNING: Invalid date string\n");
+        return 1;
+    }
+
+    int year, month, day;
+    if (sscanf(date_str, "%d-%d-%d", &year, &month, &day) == 3) {
+        printf("DEBUG: Parsed date: %d-%02d-%02d\n", year, month, day);
+        return (month >= 1 && month <= 12) ? month : 1;
+    }
+
+    printf("WARNING: Failed to parse date: %s\n", date_str);
+    return 1;
+}
+
+// Fungsi untuk mengambil bulan rilis dari API
+int fetch_release_month(int id) {
+    char temp_file[] = "/tmp/manhwa_temp_XXXXXX";
+    int fd = mkstemp(temp_file);
+    if (fd == -1) {
+        perror("Failed to create temp file");
+        return 1; // Default value
+    }
+    close(fd);
+
+    char api_url[MAX_PATH];
+    snprintf(api_url, sizeof(api_url), "https://api.jikan.moe/v4/manga/%d", id);
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Gunakan curl dengan timeout
+        execlp("sh", "sh", "-c", 
+               "curl -s --max-time 30 \"$0\" | jq -r '.data.published.from // \"N/A\" | split(\"T\")[0]' > \"$1\"", 
+               api_url, temp_file);
+        exit(EXIT_FAILURE);
+    }
+
+    waitpid(pid, NULL, 0); // Tunggu hingga selesai
+
+    // Baca file dengan error handling
+    FILE *file = fopen(temp_file, "r");
+    if (!file) {
+        remove(temp_file);
+        return 1;
+    }
+
+    char date_str[20] = "N/A";
+    fgets(date_str, sizeof(date_str), file);
+    fclose(file);
+    remove(temp_file);
+
+    // Debugging: Print tanggal yang didapat
+    printf("DEBUG: Raw date for ID %d: %s\n", id, date_str);
+
+    return extract_month_from_date(date_str);
+}
+
+
+void* download_images(void *arg) {
+    DownloadTask *task = (DownloadTask*)arg;
+    // Dapatkan bulan rilis SEKALI di awal thread
+    static pthread_mutex_t api_mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&api_mutex);
+    int release_month = fetch_release_month(task->id);
+    pthread_mutex_unlock(&api_mutex);
+
+    release_month = (release_month < 1 || release_month > 12) ? 1 : release_month;
+    printf("CONFIRMED: %s release month = %d\n", task->heroine_name, release_month);
+
+    // Buat direktori heroine
+    char dirpath[MAX_PATH];
+    snprintf(dirpath, sizeof(dirpath), "Heroines/%s", task->heroine_name);
+    create_dir(dirpath);
+
+    printf("Downloading %d copies of %s for %s\n", 
+           release_month, task->image_url, task->heroine_name);
+
+    // Download satu URL berkali-kali
+    for (int i = 0; i < release_month; i++) {
+        char filename[MAX_PATH];
+        snprintf(filename, sizeof(filename), "%s/%s_%d.jpg",
+                dirpath, task->heroine_name, i+1);
+
+        pid_t pid = fork();
+        if (pid == 0) { // Child process
+            // Gunakan wget dengan timeout 30 detik
+            execlp("wget", "wget", "-q", "--timeout=30", "-O", filename, task->image_url, NULL);
+            exit(EXIT_FAILURE);
+        } else { // Parent
+            int status;
+            waitpid(pid, &status, 0);
+            
+            if (WIFEXITED(status)) {
+                if (WEXITSTATUS(status) == 0) {
+                    printf("Success: %s\n", filename);
+                } else {
+                    fprintf(stderr, "Failed to download copy %d (Status: %d)\n",
+                           i+1, WEXITSTATUS(status));
+                }
+            }
+        }
+        sleep(1); // Delay antara download
+    }
+    return NULL;
+}
+
+void process_image_downloads() {
+    create_dir("Heroines");
+    pthread_t threads[MAX_MANHWA];
+    DownloadTask tasks[MAX_MANHWA];
+    
+    for (int i = 0; i < MAX_MANHWA; i++) {
+        tasks[i].manhwa_name = manhwa_list[i].title;
+        tasks[i].heroine_name = manhwa_list[i].heroine_name;
+        tasks[i].id = manhwa_list[i].id;
+        tasks[i].image_url = manhwa_list[i].image_urls;
+        pthread_create(&threads[i], NULL, download_images, &tasks[i]);
+    }
+    
+    for (int i = 0; i < MAX_MANHWA; i++) {
+        pthread_join(threads[i], NULL);
+    }
+}
+
+int is_directory(const char *path) {
+    struct stat statbuf;
+    if (stat(path, &statbuf)) {
+        return 0;
+    }
+    return S_ISDIR(statbuf.st_mode);
+}
+
+void archive_and_clean_heroine_images() {
+    create_dir("Archive/Images");
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir("Heroines")) != NULL) {
+        char *heroine_dirs[MAX_MANHWA];
+        int count = 0;
+        while ((ent = readdir(dir)) != NULL && count < MAX_MANHWA) {
+            if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
+                char path[MAX_PATH];
+                snprintf(path, MAX_PATH, "Heroines/%s", ent->d_name);
+                if (is_directory(path)) {
+                    heroine_dirs[count] = strdup(ent->d_name);
+                    if (heroine_dirs[count]) count++;
+                }
+            }
+        }
+        // Sort alphabetically
+        for (int i = 0; i < count - 1; i++) {
+            for (int j = i + 1; j < count; j++) {
+                if (strcmp(heroine_dirs[i], heroine_dirs[j]) > 0) {
+                    char *temp = heroine_dirs[i];
+                    heroine_dirs[i] = heroine_dirs[j];
+                    heroine_dirs[j] = temp;
+                }
+            }
+        }
+        // Archive each directory
+        for (int i = 0; i < count; i++) {
+            // Find matching manhwa info
+            ManhwaInfo *info = NULL;
+            for (int j = 0; j < MAX_MANHWA; j++) {
+                if (strcmp(manhwa_list[j].heroine_name, heroine_dirs[i]) == 0) {
+                    info = &manhwa_list[j];
+                    break;
+                }
+            }
+            if (info) {
+                char uppercase[MAX_FILENAME];
+                get_uppercase_manhwa_name(info->title, uppercase);
+                char zip_path[MAX_PATH];
+                snprintf(zip_path, MAX_PATH, "Archive/Images/%s_%s.zip", uppercase, heroine_dirs[i]);
+                char src_path[MAX_PATH];
+                snprintf(src_path, MAX_PATH, "Heroines/%s", heroine_dirs[i]);
+                pid_t pid = fork();
+                if (pid == 0) {
+                    execlp("zip", "zip", "-r", zip_path, src_path, NULL);
+                    exit(EXIT_FAILURE);
+                } else {
+                    wait(NULL);
+                }
+                pid = fork();
+                if (pid == 0) {
+                    execlp("rm", "rm", "-rf", src_path, NULL);
+                    exit(EXIT_FAILURE);
+                } else {
+                    wait(NULL);
+                }
+            }   
+            free(heroine_dirs[i]);
+        }
+        closedir(dir);
+    }
+}
+
+int main() {
+    // Part a: Fetch manhwa data
+    create_dir("Manhwa");
+    for (int i = 0; i < MAX_MANHWA; i++) {
+        fetch_manhwa_data(manhwa_list[i].id, manhwa_list[i].title);
+    }    
+    // Part b: Zip text files
+    zip_text_files();
+    // Part c: Download images from provided URLs
+    process_image_downloads();
+    // Part d: Archive and clean
+    archive_and_clean_heroine_images();
+    printf("All tasks completed successfully!\n");
+    return 0;
+}
+```
+
+## A. Summoning the Manhwa Stats
+Pada kode ini akan dilakukan pemisahan beberapa data terkait title, status, release, genre, theme, dan author. Dan menyimpannya dalam file teks dengan nama file berupa judul versi bahasa Inggris. 
+1. Untuk langkah awal kita buat dulu beberapa inisiasi agar lebih mudah nantinya dan struct untuk menyimpan data awal dari manhwa serta struct untuk task download nantinya
+
+```c
+#define MAX_MANHWA 4 // Total manhwa
+#define MAX_BUFFER 4096 // Ukuran buffer maksimal
+#define MAX_PATH 1024 // Panjang maksimal path
+#define MAX_FILENAME 256 // Panjang maksimal untuk nama file
+
+typedef struct {
+    char *title;
+    char *heroine_name;
+    int id;
+    char *image_urls;
+    int release_month; 
+} ManhwaInfo;
+
+typedef struct {
+    char *manhwa_name;
+    char *heroine_name;
+    int id;
+    char *image_url;
+    int num_images;
+} DownloadTask;
+```
+
+2. Lalu, kita masukkan data dari file manhwa yang ingin dicari dengan format berupa nama, nama heroine, code API sebagai ID, link poto heroine, dan inisiasi bulan rilis sebagai 0. 
+
+```c
+ManhwaInfo manhwa_list[MAX_MANHWA] = {
+    { // Lia
+        .title = "Mistaken as the Monster Duke's Wife",
+        .heroine_name = "Lia",
+        .id = 168827,
+        .image_urls = "https://i.pinimg.com/736x/cc/88/fc/cc88fc7520e11783dccbf081dcf5293d.jpg",
+        .release_month = 0
+    },
+    { // Tia
+        .title = "The Villainess Lives Again", 
+        .heroine_name = "Tia", 
+        .id = 147205,
+        .image_urls = "https://i.pinimg.com/736x/f4/02/2c/f4022c1333fcd4f9bc015433a26e9a21.jpg",
+        .release_month = 0
+    },
+    { // Adelia
+        .title = "No, I Only Charmed the Princess!", 
+        .heroine_name = "Adelia", 
+        .id = 169731,
+        .image_urls = "https://i.pinimg.com/736x/43/d6/72/43d672d7e05e96a234071beb02ee4d58.jpg",
+        .release_month = 0
+    },
+    { // Lizen
+        .title = "Darling, Why Can't We Divorce?", 
+        .heroine_name = "Lizen", 
+        .id = 175521,
+        .image_urls = "https://i.pinimg.com/736x/6f/b1/bc/6fb1bc43cb83e70c2627a4405300b7ae.jpg",
+        .release_month = 0
+    }
+};
+```
+
+3. Ubah format dari nama yang sebelumnya spasi diubah menjadi underscore 
+
+```c
+void format_filename(char *str) {
+    char temp[MAX_FILENAME] = {0};
+    int j = 0;
+    for (int i = 0; str[i] && j < MAX_FILENAME - 1; i++) {
+        if (str[i] == ' ') {
+            temp[j++] = '_';
+        } else if (isalnum(str[i]) || str[i] == '_') {
+            temp[j++] = str[i];
+        }
+    }
+    temp[j] = '\0';
+    strncpy(str, temp, MAX_FILENAME);
+}
+```
+Membuat string baru (temp) yang akan menyimpan perubahan, dan kembalikan ke string utama dengan strncpy.
+
+4. Mencari huruf kapital dan membuat fungsi untuk membuat folder menggunakan exeplp
+
+```c
+void get_uppercase_manhwa_name(const char *manhwa_name, char *result) {
+    char temp[MAX_FILENAME];
+    strncpy(temp, manhwa_name, MAX_FILENAME - 1);
+    temp[MAX_FILENAME - 1] = '\0';
+    format_filename(temp);
+    int j = 0;
+    for (int i = 0; temp[i] && j < MAX_FILENAME - 1; i++) {
+        if (isupper(temp[i])) {
+            result[j++] = temp[i];
+        }
+    }
+    result[j] = '\0';
+}
+
+
+void create_dir(const char *path) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        execlp("mkdir", "mkdir", "-p", path, NULL);
+        exit(EXIT_FAILURE);
+    } else {
+        wait(NULL);
+    }
+}
+```
+
+5. Membuat suatu fungsi untuk mencari data-data yang diperlukan untuk file teksnya
+
+```c
+void fetch_manhwa_data(int id, const char *title) {
+    char filename[MAX_FILENAME];
+    strncpy(filename, title, MAX_FILENAME - 1);
+    filename[MAX_FILENAME - 1] = '\0';
+    format_filename(filename);
+    // Membuat variabel baru untuk menyimpan filename yang sudah diubah formatnya dari spasi ke underscore
+
+    char path[MAX_PATH];
+    snprintf(path, MAX_PATH, "Manhwa/%s.txt", filename);
+    // Membuat file tujuan untuk menyimpan data yang akan dibuat
+
+    pid_t pid = fork(); // Membuat child process dengan fork untuk mengambil data
+    if (pid == 0) {
+        char api_url[MAX_PATH]; // Variabel untuk menyimpan link
+        snprintf(api_url, MAX_PATH, "https://api.jikan.moe/v4/manga/%d", id); // Ubah link dengan mengganti id terakhir
+        
+        char command[MAX_BUFFER];
+        snprintf(command, MAX_BUFFER, 
+                "curl -s \"%s\" | jq -r '[" // Run curl untuk menjadi data dari link yang disimpan tadi
+                ".data.title // \"N/A\", " // Judul
+                ".data.status // \"N/A\", " // Status
+                "(.data.published.from // \"N/A\" | split(\"T\")[0]), " // Release dengan keinginan mengambil tanggal saja
+                "((.data.genres // []) | map(.name) | join(\", \") // \"N/A\"), " // Genre, jika lebih dari satu gabungkan dan tambahkan koma
+                "((.data.themes // []) | map(.name) | join(\", \") // \"N/A\"), " // Tema, jika lebih dari satu gabungkan dan tambahkan koma
+                "((.data.authors // []) | map(.name) | join(\", \") // \"N/A\")] | " // Author, jika lebih dari satu gabungkan dan tambahkan koma
+                "join(\"\\n\")' > \"%s\"", // Digabungkan dan diberi newline untuk setiap poin dan disimpan ke folder manhwa
+                api_url, path); 
+        execlp("sh", "sh", "-c", command, NULL); // Eksekusi
+        exit(EXIT_FAILURE); // Exit jika gagal
+    } else {
+        wait(NULL); 
+        FILE *file = fopen(path, "r+"); // Buka dir dan lakukan update
+        if (file) {
+            char content[MAX_BUFFER] = {0}; // Buat char baru
+            size_t bytes_read = fread(content, 1, MAX_BUFFER - 1, file); // Membaca file per bit dan menyimpannya di content
+            content[bytes_read] = '\0'; // Menyisakan satu string terakhir untuk null
+            char *lines[6] = {0}; // Membuat string baru untuk menyimpan dalam bentuk teks
+            char *token = strtok(content, "\n"); // Memisahkan konten dengan batasan newline
+            int i = 0;
+            while (token && i < 6) {
+                lines[i++] = token; // Masukkan ke line 
+                token = strtok(NULL, "\n");
+            }
+            rewind(file);
+            fprintf(file, "Title: %s\n", lines[0] ? lines[0] : "N/A");
+            fprintf(file, "Status: %s\n", lines[1] ? lines[1] : "N/A");
+            fprintf(file, "Release: %s\n", lines[2] ? lines[2] : "N/A");
+            fprintf(file, "Genre: %s\n", lines[3] ? lines[3] : "N/A");
+            fprintf(file, "Theme: %s\n", lines[4] ? lines[4] : "N/A");
+            fprintf(file, "Author: %s\n", lines[5] ? lines[5] : "N/A");
+            fclose(file); // Urutkan ulang
+        }
+    }
+}
+```
+
+## B. Seal the Scrolls
+Menyimpan data Manhwa ke dalam file zip
+
+```c
+void zip_text_files() {
+    create_dir("Archive"); // Buat folde baru Archive
+    DIR *dir; // pointer ke directory
+    struct dirent *ent; // Struct untuk menyimpan info entry direktori
+    if ((dir = opendir("Manhwa")) != NULL) { // Membuka direktori Manhwa untuk dibaca
+        while ((ent = readdir(dir)) != NULL) { // Membaca setiap entry dalam direktori dan melakukan loop hingga NULL
+            if (strstr(ent->d_name, ".txt")) { // Memeriksa apakah nama file mengandung ekstensi .txt dan 
+                char filename[MAX_FILENAME];
+                strncpy(filename, ent->d_name, MAX_FILENAME - 1);
+                filename[MAX_FILENAME - 1] = '\0'; // Menyimpan ulang nama dari filename
+                char *dot = strrchr(filename, '.'); // Mencari titik terakhir berupa .txt
+                if (dot) *dot = '\0'; // Mengubah .txt menjadi null
+                char uppercase[MAX_FILENAME]; // Menyimpan kapital
+                get_uppercase_manhwa_name(filename, uppercase); // Mengubah judul menjadi mengambil huruf kapital saja
+                char src_path[MAX_PATH]; // Char untuk menyimmpan data sumber yang sebelumnya
+                snprintf(src_path, MAX_PATH, "Manhwa/%s", ent->d_name); // Path lengkap file sumber
+                char dest_path[MAX_PATH]; // Char untuk menyimpan file zip
+                snprintf(dest_path, MAX_PATH, "Archive/%s.zip", uppercase); // Menyimpan file dalam zip dengan format JUDULKAPITAL.zip
+                pid_t pid = fork(); // childe process
+                if (pid == 0) {
+                    execlp("zip", "zip", "-j", dest_path, src_path, NULL); // Eksekusi file ke dalam zip
+                    exit(EXIT_FAILURE); // Exit jika gagal
+                } else {
+                    wait(NULL); // Menunggu child process
+                }
+            }
+        }
+        closedir(dir); // Menutup directory
+    }
+}
+
+```
+
+## C. Making the Waifu Gallery
+Mendownload gambar dari heroine alias Female Main Character (FMC) dengan jumlah unduhan sesuai dengan bulan rilis manhwa.
+1. Tentukan bulan release
+
+```c
+// Fungsi untuk ekstrak bulan dari tanggal
+int extract_month_from_date(const char *date_str) {
+    if (!date_str || strcmp(date_str, "N/A") == 0) { // Cek jika date_str NULL atau string "N/A"
+        printf("WARNING: Invalid date string\n"); // Cetak warning 
+        return 1; // Dan return default atau 1
+    }
+
+    int year, month, day; // int untuk menyimpan tanggal, bulan dan tahun
+    if (sscanf(date_str, "%d-%d-%d", &year, &month, &day) == 3) { // Return value 3 menandakan semua 3 komponen berhasil diparse
+        printf("DEBUG: Parsed date: %d-%02d-%02d\n", year, month, day); // Tampilkan ulang pada terminal
+        return (month >= 1 && month <= 12) ? month : 1; // Cek dan tampilkan bulannya saja
+    }
+
+    printf("WARNING: Failed to parse date: %s\n", date_str); // Tampilkan WARNING, jika gagal
+    return 1; // Return default
+}
+
+// Fungsi untuk mengambil bulan rilis dari API
+int fetch_release_month(int id) {
+    char temp_file[] = "/tmp/manhwa_temp_XXXXXX"; // Buat int baru dan template nama file dengan XXXXXX yang akan diganti
+    int fd = mkstemp(temp_file); // Diubah dengan kode unik
+    if (fd == -1) {
+        perror("Failed to create temp file"); // Print Failed jika gagal
+        return 1; // Default value
+    }
+    close(fd); // Tutup file descriptor
+
+    char api_url[MAX_PATH]; // Char untuk link Manhwa
+    snprintf(api_url, sizeof(api_url), "https://api.jikan.moe/v4/manga/%d", id); // Memasukkan id
+
+    pid_t pid = fork(); // Child process
+    if (pid == 0) { 
+        // Gunakan curl dengan timeout
+        execlp("sh", "sh", "-c", 
+               "curl -s --max-time 30 \"$0\" | jq -r '.data.published.from // \"N/A\" | split(\"T\")[0]' > \"$1\"", 
+               api_url, temp_file); // Run curl dengan menjalanakn jq untuk mengambil data published from dan akan disimpan di tempt_file
+        exit(EXIT_FAILURE); // Exit
+    }
+
+    waitpid(pid, NULL, 0); // Tunggu hingga selesai
+
+    // Baca file dengan error handling
+    FILE *file = fopen(temp_file, "r"); // Buka file, dan baca saja
+    if (!file) {
+        remove(temp_file); // Jika file tidak dapat dibuka maka hapus file 
+        return 1; // Kembalikan default
+    }
+
+    char date_str[20] = "N/A"; // Buat char untuk menyimpan string tanggal dan inisiasi menggunakan N/A
+    fgets(date_str, sizeof(date_str), file); // Membaca baris tanggal dan menyimpannya pada string sebelumnya
+    fclose(file); // Tutup file
+    remove(temp_file); // Hapus file temp yang sudah tidak diperlukan 
+
+    // Debugging: Print tanggal yang didapat
+    printf("DEBUG: Raw date for ID %d: %s\n", id, date_str); // Tampilkan tanggal mentah yang didapat
+
+    return extract_month_from_date(date_str); // Panggil fungsi untuk memisahkannya
+}
+```
+
+2. Download poto (perulangan tergantung dari bulan rilis)
+
+```c
+void* download_images(void *arg) {
+    DownloadTask *task = (DownloadTask*)arg; // Pannggil struct DownloadTask dan samakan dengan input void yang dimasukkan
+    // Dapatkan bulan rilis SEKALI di awal thread
+    static pthread_mutex_t api_mutex = PTHREAD_MUTEX_INITIALIZER; // Inisialisasi static mutex
+    pthread_mutex_lock(&api_mutex); // Lock
+    int release_month = fetch_release_month(task->id); // Jalankan untuk mencari bulan rilis
+    pthread_mutex_unlock(&api_mutex); // Unlock
+
+    release_month = (release_month < 1 || release_month > 12) ? 1 : release_month; // Cek apakah sudah sesuai dengan input
+    printf("CONFIRMED: %s release month = %d\n", task->heroine_name, release_month); // Print hasilnya ke terminal
+
+    // Buat direktori heroine
+    char dirpath[MAX_PATH]; // Untuk folder heroine
+    snprintf(dirpath, sizeof(dirpath), "Heroines/%s", task->heroine_name); // Lokasi folder heroine
+    create_dir(dirpath); // Buat foldernya 
+
+    printf("Downloading %d copies of %s for %s\n", 
+           release_month, task->image_url, task->heroine_name); // Tampilkan pada terminal berapa banyak yang didownload
+
+    // Download satu URL berkali-kali
+    for (int i = 0; i < release_month; i++) { // Loop sebanyak bulan rilis
+        char filename[MAX_PATH]; // Untuk menyimpan nama file image
+        snprintf(filename, sizeof(filename), "%s/%s_%d.jpg",
+                dirpath, task->heroine_name, i+1); // Menamakan ulang untuk gambar yang akan didownload dan juga foldernya menjadi folder/namaheroine_loopkeberapa.txt
+
+        pid_t pid = fork(); // 
+        if (pid == 0) { // Child process
+            // Gunakan wget dengan timeout 30 detik
+            execlp("wget", "wget", "-q", "--timeout=30", "-O", filename, task->image_url, NULL); // Exekusi program dari wget untuk mendownload gambar dan format sesuai dengan filename
+            exit(EXIT_FAILURE); // Keluar jika gagal 
+        } else { // Parent
+            int status; // int status
+            waitpid(pid, &status, 0); // Tunggu Child Process selesai
+            
+            if (WIFEXITED(status)) { // Proses berhenti normal (bukan karena signal)
+                if (WEXITSTATUS(status) == 0) { // Exit code == 0 (sukses)
+                    printf("Success: %s\n", filename); // Print sukses
+                } else { // Gagal
+                    fprintf(stderr, "Failed to download copy %d (Status: %d)\n", 
+                           i+1, WEXITSTATUS(status)); // Print gagal, dan tunjukkan statusnya
+                }
+            }
+        }
+        sleep(1); // Delay antara download
+    }
+    return NULL; // sebagai penanda selesai
+}
+```
+
+3. Membuat folder dan memanggil fungsi download_images
+
+```c
+void process_image_downloads() {
+    create_dir("Heroines"); // Buat folder Heroines
+    pthread_t threads[MAX_MANHWA]; // Array untuk menyimpan thread (total 4 manhwa)
+    DownloadTask tasks[MAX_MANHWA]; // Buat struct DownloadTask baru (sebanyak 4 (untuk 4 manhwa))
+    
+    for (int i = 0; i < MAX_MANHWA; i++) { // loop 
+        tasks[i].manhwa_name = manhwa_list[i].title; // Samakan struct DownloadTask dengan Manhwa_list untuk judul
+        tasks[i].heroine_name = manhwa_list[i].heroine_name; // Nama Heroine
+        tasks[i].id = manhwa_list[i].id; // Id (untuk cek data manhwa)
+        tasks[i].image_url = manhwa_list[i].image_urls; // URL (link download poto)
+        pthread_create(&threads[i], NULL, download_images, &tasks[i]); // Run process download_images pada thread yang disimpan
+    }
+    
+    for (int i = 0; i < MAX_MANHWA; i++) {
+        pthread_join(threads[i], NULL); // Block sampai thread i selesai dan thread (i+1) sudah dibuat tapi tidak akan dijoin sebelum thread i selesai
+    }
+}
+```
+
+## D. Zip. Save. Goodbye
+Menyimpan semua poto di dalam zip dengan format [HURUFKAPITALNAMAMANHWA]_[namaheroine].zip dan disimpan di folder Archive/Images. Setelah zip selesai, gambar pada masing masing folder Heroine akan dihapus secara urut dengan abjad.
+
+1. Buat fungsi untuk cek apakah directory atau folder yang ingin di archive ada
+
+```c
+int is_directory(const char *path) {
+    struct stat statbuf; // statbuf adalah struct yang akan menyimpan informasi tentang file/direktori
+    if (stat(path, &statbuf)) { // Stat akan mengisi statbuf dengan path dan menceknya apakah sama dengan 0 atau sesuai 
+        return 0; // Jika bukan 0, maka return 0
+    }
+    return S_ISDIR(statbuf.st_mode); // Jika sesuai akan dicek apakah berupa directory atau bukan dengan bit permission
+}
+```
+
+2. Buat fungsi untuk archive dan hapus file setelah semua berhasil di archive
+
+```c
+void archive_and_clean_heroine_images() {
+    create_dir("Archive/Images"); // Buat directory Archive/Images
+    DIR *dir; // buat variabel directory baru 
+    struct dirent *ent; // Buat struct untuk fungsi drectory
+    if ((dir = opendir("Heroines")) != NULL) { // Buka directory Heroines dan cek apakah ada
+        char *heroine_dirs[MAX_MANHWA]; // Buat char baru untuk tempat file yang akan menjadi lokasi directory heroine
+        int count = 0; // int untuk menghitung total dir image 
+        while ((ent = readdir(dir)) != NULL && count < MAX_MANHWA) { // Membaca directory heroines dan mengeceknya apakah ada isinya atau tidak
+            if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) { // Mengecek apakah directory sekarang dan directory induk atau sebelumnya tu ada, dan tidak akan dianggap(hanya fokus dengan didalamnya)
+                char path[MAX_PATH]; // Buat char baru
+                snprintf(path, MAX_PATH, "Heroines/%s", ent->d_name); // Menyimpan folder dalam path
+                if (is_directory(path)) { // Cek apakah path termasuk directory
+                    heroine_dirs[count] = strdup(ent->d_name); // Subdirectory dalam Heroines akan dimasukkan dalam heroines_dirs
+                    if (heroine_dirs[count]) count++; // Cek apakah berhasil dan lanjut
+                }
+            }
+        }
+        // Sort alphabetically (Mengurutkan nama Heroine)
+        for (int i = 0; i < count - 1; i++) {
+            for (int j = i + 1; j < count; j++) {
+                if (strcmp(heroine_dirs[i], heroine_dirs[j]) > 0) {
+                    char *temp = heroine_dirs[i];
+                    heroine_dirs[i] = heroine_dirs[j];
+                    heroine_dirs[j] = temp;
+                }
+            }
+        }
+        // Archive each directory
+        for (int i = 0; i < count; i++) {
+            // Find matching manhwa info
+            ManhwaInfo *info = NULL; // Buat struct ManhwaInfo (info) dengan inisiasi awal NULL
+            for (int j = 0; j < MAX_MANHWA; j++) {
+                if (strcmp(manhwa_list[j].heroine_name, heroine_dirs[i]) == 0) { // Cek apakha antara nama heroine pada ManhwaInfo sama dengan nama directory pada Heroine
+                    info = &manhwa_list[j]; // Tulis ulang dalam struct baru
+                    break; // keluar dan akan nge loop yang sebelumnya
+                }
+            }
+            if (info) { // Cek apakah info ada (dalam artian apakah datanya berhasil disimpan pada char baru)
+                char uppercase[MAX_FILENAME]; // untuk penamaan judul manhwa untuk zip image
+                get_uppercase_manhwa_name(info->title, uppercase); // Masukkan hanya kapital
+                char zip_path[MAX_PATH]; // Nama zip dan lokasi zipnya
+                snprintf(zip_path, MAX_PATH, "Archive/Images/%s_%s.zip", uppercase, heroine_dirs[i]); // Berlokasi di Archive/Images/ dengan format nama JUDUL(kapital)_namaheroine.zip
+                char src_path[MAX_PATH]; // Lokasi atau tempat yang ingin di zip
+                snprintf(src_path, MAX_PATH, "Heroines/%s", heroine_dirs[i]); // Lokasinya di folder Heroines/NAMAHEROINE
+                pid_t pid = fork(); // Child process
+                if (pid == 0) {
+                    execlp("zip", "zip", "-r", zip_path, src_path, NULL); // Eksekusi file zip dengan zip_path (lokasi tujuan dan nama file zip) dan src_path(sebagai folder yang ingin di zip)
+                    exit(EXIT_FAILURE); // Exit jika gagal
+                } else {
+                    wait(NULL); // Tunggu hingga child process selesai
+                }
+                pid = fork(); // Buat Child Process
+                if (pid == 0) { // berhasil membuat child process
+                    execlp("rm", "rm", "-rf", src_path, NULL); // hapus folder src_path(tetapi tidak Heroines folder)
+                    exit(EXIT_FAILURE); // Keluar jika gagal
+                } else {
+                    wait(NULL); // Tunggu hingga child process selesai
+                }
+            }   
+            free(heroine_dirs[i]); // Kosongkan char heroine_dirs
+        }
+        closedir(dir); // Keluar dari directory
+    }
+}
+```
+## Int Main
+Memanggil seluruh fungsi
+```c
+int main() {
+    // Part a: Fetch manhwa data
+    create_dir("Manhwa");
+    for (int i = 0; i < MAX_MANHWA; i++) {
+        fetch_manhwa_data(manhwa_list[i].id, manhwa_list[i].title);
+    }    
+    // Part b: Zip text files
+    zip_text_files();
+    // Part c: Download images from provided URLs
+    process_image_downloads();
+    // Part d: Archive and clean
+    archive_and_clean_heroine_images();
+    printf("All tasks completed successfully!\n");
+    return 0;
+}
+```
