@@ -1197,7 +1197,7 @@ int main() {
 }
 ```
 
-## A. Summoning the Manhwa Stats
+### A. Summoning the Manhwa Stats
 Pada kode ini akan dilakukan pemisahan beberapa data terkait title, status, release, genre, theme, dan author. Dan menyimpannya dalam file teks dengan nama file berupa judul versi bahasa Inggris. 
 1. Untuk langkah awal kita buat dulu beberapa inisiasi agar lebih mudah nantinya dan struct untuk menyimpan data awal dari manhwa serta struct untuk task download nantinya
 
@@ -1366,7 +1366,7 @@ void fetch_manhwa_data(int id, const char *title) {
 }
 ```
 
-## B. Seal the Scrolls
+### B. Seal the Scrolls
 Menyimpan data Manhwa ke dalam file zip
 
 ```c
@@ -1403,7 +1403,7 @@ void zip_text_files() {
 
 ```
 
-## C. Making the Waifu Gallery
+### C. Making the Waifu Gallery
 Mendownload gambar dari heroine alias Female Main Character (FMC) dengan jumlah unduhan sesuai dengan bulan rilis manhwa.
 1. Tentukan bulan release
 
@@ -1542,7 +1542,7 @@ void process_image_downloads() {
 }
 ```
 
-## D. Zip. Save. Goodbye
+### D. Zip. Save. Goodbye
 Menyimpan semua poto di dalam zip dengan format [HURUFKAPITALNAMAMANHWA]_[namaheroine].zip dan disimpan di folder Archive/Images. Setelah zip selesai, gambar pada masing masing folder Heroine akan dihapus secara urut dengan abjad.
 
 1. Buat fungsi untuk cek apakah directory atau folder yang ingin di archive ada
