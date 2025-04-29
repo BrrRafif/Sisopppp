@@ -3,7 +3,7 @@
 | :--------: | :------------: |
 | 5025221000 | Student 1 Name |
 | 5025221000 | Student 2 Name |
-| 5025221000 | Student 3 Name |
+| 5025241037 | Agil Lukman Hakim Muchdi |
 
 # Praktikum Modul 2 _(Module 2 Lab Work)_
 
