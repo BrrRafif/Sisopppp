@@ -1366,6 +1366,13 @@ void fetch_manhwa_data(int id, const char *title) {
 }
 ```
 
+Untuk ouputnya akan di langsung dipisahkan dengan format underscore
+![Screenshot 2025-04-30 053044](https://github.com/user-attachments/assets/640ec8e7-a318-47a3-8d81-898d87510a2c)
+![Screenshot 2025-04-30 052841](https://github.com/user-attachments/assets/9acc3cee-c841-4c48-9aba-2fe9b3b22f94)
+
+(Salah satu contoh data manhwanya)
+![image](https://github.com/user-attachments/assets/2f3ab9c5-bc9c-4157-a24f-8cad43bc61f6)
+
 ### B. Seal the Scrolls
 Menyimpan data Manhwa ke dalam file zip
 
@@ -1402,6 +1409,11 @@ void zip_text_files() {
 }
 
 ```
+
+Hasil akhirnya :
+![image](https://github.com/user-attachments/assets/e88e6163-6fe5-48f7-8cd3-485a418fe76a)
+![image](https://github.com/user-attachments/assets/3906ab6f-ee60-4010-9ca0-07fe474b353d)
+
 
 ### C. Making the Waifu Gallery
 Mendownload gambar dari heroine alias Female Main Character (FMC) dengan jumlah unduhan sesuai dengan bulan rilis manhwa.
@@ -1541,6 +1553,10 @@ void process_image_downloads() {
     }
 }
 ```
+Hasilnya download akan dilakukan satu persatu dari heroines manhwa (dengan urutan manhwa seperti sebelumnya) sejumlah bulan rilis:
+![Screenshot 2025-04-30 050723](https://github.com/user-attachments/assets/26c1ae2a-2c13-4a0d-9455-625d9b0e5405)
+Salah satu hasilnya
+![image](https://github.com/user-attachments/assets/29369041-3c11-4028-b1df-7ca6b141cf52)
 
 ### D. Zip. Save. Goodbye
 Menyimpan semua poto di dalam zip dengan format [HURUFKAPITALNAMAMANHWA]_[namaheroine].zip dan disimpan di folder Archive/Images. Setelah zip selesai, gambar pada masing masing folder Heroine akan dihapus secara urut dengan abjad.
@@ -1625,6 +1641,13 @@ void archive_and_clean_heroine_images() {
     }
 }
 ```
+Archive dan penghapusan akan dilakukan secara berurutan:
+![Screenshot 2025-04-30 050737](https://github.com/user-attachments/assets/ac8f8fb0-ede6-4cfc-b38c-bf496d4c6c7a)
+![Screenshot 2025-04-30 052919](https://github.com/user-attachments/assets/e88b1c31-9ae3-467c-8918-51bc9a365d16)
+Salah satu output (jika zip di unzip):
+![Screenshot 2025-04-30 052936](https://github.com/user-attachments/assets/116f90f4-c453-44d0-a013-e942679b4f0b)
+
+
 ## Int Main
 Memanggil seluruh fungsi
 ```c
@@ -1720,3 +1743,9 @@ int main() {
     return 0;
 }
 ```
+Jika di run akan menampilkan output untuk input nya:
+![image](https://github.com/user-attachments/assets/662ed8a7-ed65-4697-bd2f-f6c815753365)
+Dan akan menunggu loadbalancer hingga ready, serta langsung menulis pada sistem.log:
+![image](https://github.com/user-attachments/assets/9a381ad9-be6e-458f-be1b-b6dfb897d947)
+
+
