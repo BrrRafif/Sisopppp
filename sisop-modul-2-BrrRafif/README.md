@@ -789,7 +789,7 @@ while (1) {
 
 3. Hasil dari sorting.
 
-## task 3 (Agil)
+## Task 3 (Agil)
 #### Kode
 
 ```c
