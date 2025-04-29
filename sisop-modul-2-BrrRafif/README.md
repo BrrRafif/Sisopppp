@@ -1641,7 +1641,7 @@ void archive_and_clean_heroine_images() {
     }
 }
 ```
-Archive dan penghapusan akan dilakukan secara berurutan:
+Archive dan penghapusan akan dilakukan secara berurutan (sesuai abjad):
 ![Screenshot 2025-04-30 050737](https://github.com/user-attachments/assets/ac8f8fb0-ede6-4cfc-b38c-bf496d4c6c7a)
 ![Screenshot 2025-04-30 052919](https://github.com/user-attachments/assets/e88b1c31-9ae3-467c-8918-51bc9a365d16)
 Salah satu output (jika zip di unzip):
