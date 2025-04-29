@@ -1533,11 +1533,11 @@ void process_image_downloads() {
         tasks[i].heroine_name = manhwa_list[i].heroine_name; // Nama Heroine
         tasks[i].id = manhwa_list[i].id; // Id (untuk cek data manhwa)
         tasks[i].image_url = manhwa_list[i].image_urls; // URL (link download poto)
-        pthread_create(&threads[i], NULL, download_images, &tasks[i]); // Run process download_images pada thread yang disimpan
-    }
-    
-    for (int i = 0; i < MAX_MANHWA; i++) {
-        pthread_join(threads[i], NULL); // Block sampai thread i selesai dan thread (i+1) sudah dibuat tapi tidak akan dijoin sebelum thread i selesai
+        static pthread_mutex_t api_mutex = PTHREAD_MUTEX_INITIALIZER; // Buat Mutex statis 
+        pthread_mutex_lock(&api_mutex); // Blok
+        pthread_create(&threads[i], NULL, download_images, &tasks[i]); // Run download image
+        pthread_mutex_unlock(&api_mutex); // Unblok
+        pthread_join(threads[i], NULL); // Join jika thread sudah kosong (tunggu hingga thread selesai)
     }
 }
 ```
