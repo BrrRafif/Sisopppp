@@ -1644,3 +1644,79 @@ int main() {
     return 0;
 }
 ```
+
+## Task 4
+### A. Client Mengirimkan Pesan ke Load Balancer (Agil)
+Membuat program C (client.c) yang akan mengirimkan pesan ke loadbalancer sebanyak jumlah yang ditulis menggunakan IPC dengan metode shared memory.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <time.h>
+
+typedef struct {
+    char message[100];
+    int count;
+    int is_available; // Flag untuk menandai ketersediaan data
+} MessageData; // Struct untuk menulis pesan nantinya dan memastikan loadbalancer tidak mengakses shared memory bersamaan
+
+void log_message(const char* message, int count) {
+    time_t now; 
+    time(&now); // Mendapatkan waktu saat ini
+    FILE* log_file = fopen("sistem.log", "a"); // membuka file sistem.log dalam mode append
+    if (log_file == NULL) {
+        perror("Failed to open log file"); // print error jika gagal membuka
+        return;
+    }
+    fprintf(log_file, "Message from client: %s\n", message); // Mencatat pesan apa yang dituliskan dalam sistem.log
+    fprintf(log_file, "Message count: %d\n", count); // Mencatat jumlah pesan dalam sistem.log
+    fclose(log_file); // Keluar dari sistem.log
+}
+
+int main() {
+    key_t key = ftok("loadbalancer", 65); // Membuat key unik untuk shared memory
+    int shmid = shmget(key, sizeof(MessageData), 0666|IPC_CREAT); // Membuat/alokasi shared memory (0666 = izin akses read/write untuk semua user) (IPC_CREAT = membuat shared memory jika belum ada)
+    if (shmid == -1) {
+        perror("shmget failed"); // Tampilkan error jika gagal membuat shared memory
+        exit(1); // Keluar
+    }
+
+    MessageData *data = (MessageData*) shmat(shmid, (void*)0, 0); // Menghubungkan ke shared memory (shmid = id shared memory), (void*)0 = alamat shared memory yang akan di attach, 0 berarti  memilih alamat secara otomatis, dan 0 (terakhir) flag tambahan/ tidak ada flag tambahan
+    if (data == (void*)-1) { // Gagal masuk ke alamat shared memory
+        perror("shmat failed"); // Print error jika gagal membuat shared memory
+        exit(1);
+    }
+
+    // Tunggu sampai load balancer siap
+    while (data->is_available == 1) { // Menunggu run loadbalancer.c
+        sleep(1);
+    }
+
+    char input[100]; // Char untuk menyimpan input 
+    printf("Enter message and count (format: message;count): "); // Input pesan yang diinginkan
+    fgets(input, sizeof(input), stdin); // Membaca input dari user
+    input[strcspn(input, "\n")] = 0; // Menghapus newline karena input berupa message;jumlahmessage
+
+    char *message = strtok(input, ";"); // memisahkan input sebelum ";"
+    char *count_str = strtok(NULL, ";"); // Memisahkan input sebelum NULL dan setelah ";"
+    int count = atoi(count_str); // Mengubah char "count_str" menjadi int biasa
+
+    strncpy(data->message, message, sizeof(data->message)); // Copy message ke struct data->message
+    data->count = count; // Input data->count dari inputan sebelumnya yang disimpan di int count
+    data->is_available = 1; // Tandai data tersedia untuk loadbalancer
+
+    log_message(message, count); // Jalankan log_message
+
+    // Tunggu sampai load balancer selesai memproses
+    while (data->is_available == 1) {
+        sleep(1);
+    }
+
+    shmdt(data); // Melepaskan shared memory
+    return 0;
+}
+```
