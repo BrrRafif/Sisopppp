@@ -1266,14 +1266,14 @@ void format_filename(char *str) {
     char temp[MAX_FILENAME] = {0};
     int j = 0;
     for (int i = 0; str[i] && j < MAX_FILENAME - 1; i++) {
-        if (str[i] == ' ') {
-            temp[j++] = '_';
-        } else if (isalnum(str[i]) || str[i] == '_') {
-            temp[j++] = str[i];
+        if (str[i] == ' ') { // Setiap bertemu spasi
+            temp[j++] = '_'; // Copy underscore pada string baru
+        } else if (isalnum(str[i]) || str[i] == '_') { // Jika alfanumerik atau underscore
+            temp[j++] = str[i]; // Copy biasa ke string baru
         }
     }
     temp[j] = '\0';
-    strncpy(str, temp, MAX_FILENAME);
+    strncpy(str, temp, MAX_FILENAME); // Ganti inputnya dengan yang diubah
 }
 ```
 Membuat string baru (temp) yang akan menyimpan perubahan, dan kembalikan ke string utama dengan strncpy.
@@ -1282,14 +1282,14 @@ Membuat string baru (temp) yang akan menyimpan perubahan, dan kembalikan ke stri
 
 ```c
 void get_uppercase_manhwa_name(const char *manhwa_name, char *result) {
-    char temp[MAX_FILENAME];
-    strncpy(temp, manhwa_name, MAX_FILENAME - 1);
-    temp[MAX_FILENAME - 1] = '\0';
-    format_filename(temp);
+    char temp[MAX_FILENAME]; // Char untuk menyimpan string baru
+    strncpy(temp, manhwa_name, MAX_FILENAME - 1); // Copy string nama manhwa
+    temp[MAX_FILENAME - 1] = '\0';  // Kasih NULL di belakang
+    format_filename(temp); // Ganti ke underscore
     int j = 0;
     for (int i = 0; temp[i] && j < MAX_FILENAME - 1; i++) {
-        if (isupper(temp[i])) {
-            result[j++] = temp[i];
+        if (isupper(temp[i])) { // Cek apakah Kapital
+            result[j++] = temp[i]; // Jika iya, copy ke string baru
         }
     }
     result[j] = '\0';
