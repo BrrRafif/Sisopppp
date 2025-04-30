@@ -1743,7 +1743,7 @@ int fetch_release_month(int id) {
         // Gunakan curl dengan timeout
         execlp("sh", "sh", "-c", 
                "curl -s --max-time 30 \"$0\" | jq -r '.data.published.from // \"N/A\" | split(\"T\")[0]' > \"$1\"", 
-               api_url, temp_file);
+               api_url, temp_file, NULL);
         exit(EXIT_FAILURE);
     }
 
@@ -1826,10 +1826,10 @@ void process_image_downloads() {
         tasks[i].heroine_name = manhwa_list[i].heroine_name;
         tasks[i].id = manhwa_list[i].id;
         tasks[i].image_url = manhwa_list[i].image_urls;
+        static pthread_mutex_t api_mutex = PTHREAD_MUTEX_INITIALIZER;
+        pthread_mutex_lock(&api_mutex);
         pthread_create(&threads[i], NULL, download_images, &tasks[i]);
-    }
-    
-    for (int i = 0; i < MAX_MANHWA; i++) {
+        pthread_mutex_unlock(&api_mutex);
         pthread_join(threads[i], NULL);
     }
 }
