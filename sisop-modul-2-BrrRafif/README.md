@@ -106,6 +106,7 @@ return 0;
 
 4. Hasil run program
 ![image](https://github.com/user-attachments/assets/2606d758-d2f5-4361-b3a7-debd2296e74b)
+
 ![image](https://github.com/user-attachments/assets/06e5ea83-7e1f-465a-98b6-1fb978448fda)
 
 
@@ -655,12 +656,19 @@ int main() {
 - **return 0** -> menghentikan program
 
 11. Hasil run program
- 
+
+ ![image](https://github.com/user-attachments/assets/f3ae23bf-6a50-4918-8b07-025edd0aad83)
+
 ![image](https://github.com/user-attachments/assets/90bf415a-170b-4821-a482-cc50874822a6)
+
 ![image](https://github.com/user-attachments/assets/cee1e8ba-4829-4e5b-9b80-40ce035818e0)
+
 ![image](https://github.com/user-attachments/assets/7baae72e-2bcd-4acd-8c9a-10aa863079fb)
+
 ![image](https://github.com/user-attachments/assets/62b5481b-2717-49e2-a6ae-9352e2fb15f9)
+
 ![image](https://github.com/user-attachments/assets/2abfeb9c-c0d1-4e30-9d4e-59881020bd84)
+
 ![image](https://github.com/user-attachments/assets/8321bb01-f7e7-42b7-b41d-aeb9bb68b2d9)
 
 ## **d. Pengarsipan Film**
@@ -736,7 +744,9 @@ else {
 - **printf("\nBerhasil mengarsipkan dan menghapus folder.\n");** -> menampilkan pesan bahwa proses pengarsipan sudah berhasil
 
 4. Hasil run program
-![image](https://github.com/user-attachments/assets/133a8656-1097-4497-bad5-470e798389ab)
+   
+![image](https://github.com/user-attachments/assets/dd8c0cbd-4d66-49ad-99fc-8a3476aa5d47)
+
 
 ![image](https://github.com/user-attachments/assets/50425b4c-4a8e-41d4-ae5a-fb434bbd9c54)
 
