@@ -2650,3 +2650,233 @@ int main(int argc, char *argv[]) {
 5. Setelah run load_balancer.c dan run client.c.
 
 ![load_balance](https://github.com/user-attachments/assets/d70ab806-1458-4980-8162-5c38fc1c9a30)
+
+
+## **c. & d. Worker Mencatat Pesan yang Diterima dan Catat Total Pesan yang Diterima Setiap Worker di Akhir Eksekusi** (Berwyn)
+
+Pada soal ini, worker yang menerima pesan harus mencatatkan pesannya ke dalam **`sistem.log`**. dan saat semua proses sudah selesai, setiap worker akan mencatat jumlah total pesan yang mereka terima ke bagian file **`sistem.log`**.
+
+### Kode
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <unistd.h>
+#include <signal.h>
+
+#define MSG_KEY 0x5678
+
+typedef struct {
+    long mtype;
+    char mtext[100];
+    int worker_id;
+    int is_terminate;
+} Message;
+
+int message_count = 0;
+int current_worker_id = 0;
+
+void signal_handler(int sig) {
+    char log_entry[100];
+    snprintf(log_entry, sizeof(log_entry), "Worker %d : %d messages", current_worker_id, message_count);
+    
+    FILE *log_file = fopen("sistem.log", "a");
+    if (log_file != NULL) {
+        fprintf(log_file, "%s\n", log_entry);
+        fclose(log_file);
+    }
+    
+    exit(0);
+}
+
+void process_message(int worker_id, const char *message) {
+    char log_entry[100];
+    snprintf(log_entry, sizeof(log_entry), "Worker%d: message received", worker_id);
+    
+    FILE *log_file = fopen("sistem.log", "a");
+    if (log_file != NULL) {
+        fprintf(log_file, "%s\n", log_entry);
+        fclose(log_file);
+    }
+    
+    message_count++;
+    printf("Worker %d processed: %s (Total: %d)\n", worker_id, message, message_count);
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <worker_id>\n", argv[0]);
+        exit(1);
+    }
+
+    current_worker_id = atoi(argv[1]);
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+
+    int msgid = msgget(MSG_KEY, 0666);
+    if (msgid == -1) {
+        perror("msgget failed");
+        exit(1);
+    }
+
+    printf("Worker %d ready\n", current_worker_id);
+
+    while (1) {
+        Message msg;
+        if (msgrcv(msgid, &msg, sizeof(msg) - sizeof(long), 1, 0) == -1) {
+            perror("msgrcv failed");
+            continue;
+        }
+
+        if (msg.is_terminate) {
+            signal_handler(0);
+            break;
+        }
+
+        if (msg.worker_id == current_worker_id) {
+            process_message(current_worker_id, msg.mtext);
+        }
+    }
+
+    return 0;
+}
+```
+1. Struct untuk memproses pesan
+```c
+typedef struct {
+    long mtype;
+    char mtext[100];
+    int worker_id;
+    int is_terminate;
+} Message;
+```
+
+- **mtype** -> tipe pesan
+- **mtext** -> isi pesan
+- **worker_id** -> ID worker tujuan
+- **is_terminate** -> variable untuk melakukan terminate
+
+2. Variable global untuk menampilkan ID worker dan menghitung jumlah pesan tiap worker
+```c
+int message_count = 0;
+int current_worker_id = 0;
+```
+
+3. Menangani sinyal dan mencatat aktivitas worker
+```c
+void signal_handler(int sig) {
+    char log_entry[100];
+    snprintf(log_entry, sizeof(log_entry), "Worker %d : %d messages" current_worker_id, message_count);
+    
+    FILE *log_file = fopen("sistem.log", "a");
+    if (log_file != NULL) {
+        fprintf(log_file, "%s\n", log_entry);
+        fclose(log_file);
+    }
+    
+    exit(0);
+}
+```
+
+- **log_entry[100]** -> array untuk menyimpan pesan log yang akan ditulis ke file
+- **snprintf(log_entry, sizeof(log_entry), "Worker %d : %d messages", current_worker_id, message_count)** -> mengisi `log_entry` dengan string yang memuat nilai id worker dan pesan yang diterima worker melalui variable `current_worker_id` dan `message_count`
+- **FILE *log_file = fopen("sistem.log", "a")** -> membuka file sistem.log
+- **if (log_file != NULL)** -> jika file berhasil dibuka
+- **fprintf(log_file, "%s\n", log_entry)** -> maka masukkan isi `log_entry` ke dalam file sistem.log
+- **fclose(log_file)** -> tutup kembali file lognya
+- **exit(0)** -> mengakhiri program
+
+4. Mencatat aktivitas pemrosesan pesan oleh worker ke dalam log dan terminal, dan menghitung total pesan yang telah diproses.
+```c
+void process_message(int worker_id, const char *message) {
+    char log_entry[100];
+    snprintf(log_entry, sizeof(log_entry), "Worker%d: message received", worker_id);
+    
+    FILE *log_file = fopen("sistem.log", "a");
+    if (log_file != NULL) {
+        fprintf(log_file, "%s\n", log_entry);
+        fclose(log_file);
+    }
+    
+    message_count++;
+    printf("Worker %d processed: %s (Total: %d)\n", worker_id, message, message_count);
+}
+```
+
+- **log_entry[100]** -> array untuk menyimpan pesan log yang akan ditulis ke file
+- **snprintf(log_entry, sizeof(log_entry), "Worker%d: message received"" current_worker_id)** -> mengisi `log_entry` dengan string yang memuat nilai id worker melalui variable `worker_id`
+- **FILE *log_file = fopen("sistem.log", "a")** -> membuka file sistem.log
+- **if (log_file != NULL)** -> jika file berhasil dibuka
+- **fprintf(log_file, "%s\n", log_entry)** -> maka masukkan isi `log_entry` ke dalam file sistem.log
+- **fclose(log_file)** -> tutup kembali file lognya
+- **message_count++** -> menambah total pesan yang diterima worker
+- **printf("Worker %d processed: %s (Total: %d)\n", worker_id, message, message_count);** -> mMenampilkan pesan worker dengan ID tertentu telah memproses pesan tertentu, beserta jumlah total pesan yang telah diproses oleh worker tersebut.
+
+5. Fungsi main
+```c
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <worker_id>\n", argv[0]);
+        exit(1);
+    }
+
+    current_worker_id = atoi(argv[1]);
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+
+    int msgid = msgget(MSG_KEY, 0666);
+    if (msgid == -1) {
+        perror("msgget failed");
+        exit(1);
+    }
+
+    printf("Worker %d ready\n", current_worker_id);
+
+    while (1) {
+        Message msg;
+        if (msgrcv(msgid, &msg, sizeof(msg) - sizeof(long), 1, 0) == -1) {
+            perror("msgrcv failed");
+            continue;
+        }
+
+        if (msg.is_terminate) {
+            signal_handler(0);
+            break;
+        }
+
+        if (msg.worker_id == current_worker_id) {
+            process_message(current_worker_id, msg.mtext);
+        }
+    }
+
+    return 0;
+}
+```
+
+- **if (argc != 2)** -> memeriksa apakah argumen yang diberikan tepat 2 (program dan worker_id)
+- **printf("Usage: %s <worker_id>\n", argv[0])** -> jika tidak, maka program akan menampilkan cara meng-run program ini
+- **exit(1)** -> keluar dengan status error
+-**current_worker_id = atoi(argv[1])** -> mengubah argumen kedua menjadi format int dan disimpan ke dalam `current_worker_id`
+-
+```c
+signal(SIGINT, signal_handler);
+signal(SIGTERM, signal_handler);
+```
+-> mengatur apabila ada sinyal `SIGINT` atau  `SIGTERM` maka fungsi `signal_handler` akan dijalankan
+- **int msgid = msgget(MSG_KEY, 0666)** -> mengambil ID message queue menggunakan `MSG_KEY`
+- **if (msgid == -1)** -> jika gagal mendapatkan ID-nya
+- **perror("msgget failed")** -> menampilkan pesan error
+- **exit(1)** -> keluar dengan status error
+- **printf("Worker %d ready\n", current_worker_id)** -> menampilkan bahwa worker siap untuk menerima pesan
+- **while(1)** -> infinite loop untuk menerima dan memproses pesan
+- **Message msg** -> deklarasi variable dari struct `Message` untuk menyimpan pesan yang diterima
+- **if (msgrcv(msgid, &msg, sizeof(msg) - sizeof(long), 1, 0) == -1)** -> memeriksa apakah berhasil menerima pesan dari message queue dengan tipe 1
+- **perror("msgrcv failed")** -> jika gagal, akan menampilkan pesan failed
+- **exit(1)** -> keluar dengan status error
+- **if (msg.is_terminate)** -> jika pesan yang diterima adalah pesan untuk melakukan terminate, fungsi `signal_handler` akan dipanggil
+- **break** -> keluar dari loop
+- **if (msg.worker_id == current_worker_id)** -> jika pesan dikirim untuk worker saat ini
+- **process_message(current_worker_id, msg.mtext)** -> maka fungsi `process_message` akan dipanggil
+- **return 0** -> menghentikan program
