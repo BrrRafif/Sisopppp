@@ -1,8 +1,8 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/9LcL5VTQ)
 |    NRP     |      Name      |
 | :--------: | :------------: |
-| 5025221000 | Student 1 Name |
-| 5025221000 | Student 2 Name |
+| 5025241029 | Berwyn Rafif Alvaro |
+| 5025241051 | Reza Afzaal Faizullah Taqy|
 | 5025241037 | Agil Lukman Hakim Muchdi |
 
 # Praktikum Modul 2 _(Module 2 Lab Work)_
@@ -24,6 +24,723 @@
 Tulis laporan resmi di sini!
 
 _Write your lab work report here!_
+
+## Task 1 (Berwyn)
+
+## **a. Ekstraksi File ZIP**
+
+Pada soal ini kita diminta untuk mendownload file zip yang berisi poster film dan mengekstrak file itu.
+
+### Kode 
+
+```sh
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+    pid_t pid = fork();
+    char *zip = "/home/berwyn/Sistem Operasi/film.zip";
+    char *output_f = "/home/berwyn/Sistem Operasi";
+    char *url = "https://drive.google.com/uc?export=download&id=1nP5kjCi9ReDk5ILgnM7UCnrQwFH67Z9B";
+
+    if (pid == 0) execlp("wget", "wget", "-O", zip, url, NULL);
+
+    else {
+        int status;
+        wait(&status);
+
+        if (WIFEXITED(status)){
+            char *argv[] = {"unzip", zip, "-d", output_f, NULL};
+            execv("/usr/bin/unzip", argv);
+        } 
+    }
+    return 0;
+}
+```
+
+1. Membuat proses baru dan membuat 3 variabel yang berisi path ke file .zip, direktori penyimpanan file .zip, dan alamat url file.
+```sh
+pid_t pid = fork();
+char *zip = "/home/berwyn/Sistem Operasi/film.zip";
+char *output_f = "/home/berwyn/Sistem Operasi";
+char *url = "https://drive.google.com/uc?export=download&id=1nP5kjCi9ReDk5ILgnM7UCnrQwFH67Z9B";
+```
+
+2. Menjalankan child process untuk mendownload file .zip
+```sh
+if (pid == 0) execlp("wget", "wget", "-O", zip, url, NULL);
+```
+
+- **if (pid == 0)** -> jika pid = 0 (Child proses sedang berjalan), maka jalankan blok perintah selanjutnya
+- **execlp("wget", "wget",** -> memanggil perintah wget untuk mendownload file .zip
+- **"-O", zip** -> mengubah nama file yang telah di download sesuai dengan variabel zip dan menyimpannya di path zip
+- **url** -> path untuk mendownload file
+- **NULL** -> penanda akhir argumen
+
+3. Menjalankan parent process untuk melakukan ekstraksi file .zip
+```sh
+else {
+        int status;
+        wait(&status);
+
+        if (WIFEXITED(status)){
+            char *argv[] = {"unzip", zip, "-d", output_f, NULL};
+            execv("/usr/bin/unzip", argv);
+        } 
+    }
+return 0;
+```
+
+- **status** -> variabel yang menyimpan status dari child process
+- **wait(&status)8** -> menunggu child process sampai selesai
+- **if (WIFEXITED(status))** -> percabangan untuk memeriksa apakah child process berjalan semestinya
+- ***argv[]** -> parameter untuk melakukan unzip
+- **unzip"** -> perintah yang akan dilakukan
+- **zip** -> variabel yang menyimpan alamat file yang mau di ekstrak
+- **"-d", output_f** -> menentukan output direktori hasil ekstrak ke variabel "output_f"
+- **NULL** -> penanda akhir argumen
+- **execv("/usr/bin/unzip", argv);** -> melakukan ekstraksi dengan argumen yang sudah disiapkan
+- **return 0** -> mengakhiri program
+
+4. Hasil run program
+![image](https://github.com/user-attachments/assets/2606d758-d2f5-4361-b3a7-debd2296e74b)
+![image](https://github.com/user-attachments/assets/06e5ea83-7e1f-465a-98b6-1fb978448fda)
+
+
+## **b. Pemilihan Film Secara Acak**
+
+Pada soal ini kita diminnta untuk memilihkan film yang akan ditonton oleh trabowo dan peddy
+
+### Kode
+```sh
+#include <stdio.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <time.h>
+#include <string.h>
+
+int main() {
+    DIR *dir;
+    struct dirent *file;
+    char *output_f = "/home/berwyn/Sistem Operasi/film";
+    char poster[51][51];
+    int i = 0, acak;
+
+    dir = opendir(output_f);
+    
+    while ((file = readdir(dir)) != NULL){
+        if(strstr(file->d_name, ".jpg")){
+            strcpy(poster[i], file->d_name);
+            i++;
+        }
+    }
+
+    closedir(dir);
+
+    srand(time(NULL));
+    acak = rand() % i;
+    printf("Film for Trabowo & Peddy: %s", poster[acak]);
+
+    return 0;
+}
+```
+
+1. Membuat pointer untuk membuka dan membaca isi direktori, dan membuat variable alamat direktori tempat penyimpanan poster.
+```sh
+DIR *dir;
+struct dirent *file;
+char *output_f = "/home/berwyn/Sistem Operasi/film";
+```
+
+2. Membuat variable untuk menyimpan dan menghitung poster film dan variable untuk memilih film secara acak
+```sh
+char poster[51][51];
+int i = 0, acak;
+```
+
+3. Membuka dan menyimpan isi direktori
+```sh
+dir = opendir(output_f);
+
+while ((file = readdir(dir)) != NULL){
+    if (strstr(file->d_name, ".jpg")){
+        strcpy(poster[i], file->d_name);
+        i++;
+    }
+}
+
+closedir(dir);
+```
+
+- **dir = opendir(output_f);** -> membuka folder film
+- **while ((file = readdir(dir)) != NULL)** -> membaca setiap isi dari folder film
+- **if (strstr(file->d_name, ".jpg"))** -> menyaring hanya file yang mengandung ".jpg" (file gambar)
+- **strcpy(poster[i], file->d_name);** -> menyimpan nama film ke array "poster"
+- **i++** -> menghitung jumlah film yang berhasil disimpan
+- **closedir(dir);** -> menutup folder film saat sudah selesai
+
+4. Memilih film secara acak untuk ditonton
+```sh
+srand(time(NULL));
+acak = rand() % i;
+printf("Film for Trabowo & Peddy: %s", poster[acak]);
+
+return 0;
+```
+
+- **srand(time(NULL))** -> inisialisasi seed generator angka acak agar hasil rand() berbeda setiap dijalankan
+- **acak = rand() % i;** -> mmenghasilkan angka secara acak dan disimpan ke variable `acak`
+- **printf("Film for Trabowo & Peddy: %s", poster[acak]);** -> menampilkan nama film untuk ditonton
+- **return 0** ->mengakhiri program
+
+5. Hasil run program
+
+![image](https://github.com/user-attachments/assets/b714583a-6936-46fb-98f0-a5e51413be7e)
+
+
+## **c. Memilah Film Berdasarkan Genre**
+
+Dalam soal ini, kita diminta untuk mengelompokkan film berdasarkan genrenya. Terdapat dua orang yang akan melakukannya, yaitu Trabowo dan Peddy. Trabowo akan memproses film dari urutan awal, sedangkan Peddy dari urutan akhir. Setiap kali memindahkan film ke folder genre yang sesuai, mereka harus mencatat log-nya secara bergantian ke dalam file "recap.txt". Setelah semua film selesai dikelompokkan, mereka akan menghitung jumlah film untuk setiap genre dan menentukan genre dengan jumlah terbanyak. Hasil perhitungan ini akan disimpan di file "total.txt".
+
+### Kode
+```sh
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <time.h>
+
+char *A_horror  = "/home/berwyn/Sistem Operasi/film/FilmHorror";
+char *A_animasi = "/home/berwyn/Sistem Operasi/film/FilmAnimasi";
+char *A_drama   = "/home/berwyn/Sistem Operasi/film/FilmDrama";
+char *source_f = "/home/berwyn/Sistem Operasi/film";
+
+FILE *FileLog;
+char *poster[51];
+int idx = 0, giliran = 0;  
+
+pthread_mutex_t mutex_turn = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  cond_turn  = PTHREAD_COND_INITIALIZER; 
+pthread_mutex_t mutex_log = PTHREAD_MUTEX_INITIALIZER;
+
+int get_index(char *name) {
+    int temp_idx = 0;
+    while (*name && *name != '_') {
+        if (*name >= '0' && *name <= '9'){
+            temp_idx = temp_idx * 10 + (*name - '0');
+        }
+        name++;
+    }
+    return temp_idx;
+}
+
+int sort(const void *a, const void *b) {
+    char *fa = *(char **)a;
+    char *fb = *(char **)b;
+    return get_index(fa) - get_index(fb);
+}
+
+void write_log(char *nama, char *film, char *folder) {
+    time_t waktu = time(NULL);
+    struct tm time = *localtime(&waktu);
+    char simpanWaktu[64];
+    strftime(simpanWaktu, sizeof(simpanWaktu), "%d-%m-%Y %H:%M:%S", &time);
+
+    pthread_mutex_lock(&mutex_log);
+
+    fprintf(FileLog, "[%s] %s: %s telah dipindahkan ke %s\n", simpanWaktu, nama, film, folder);
+    
+    pthread_mutex_unlock(&mutex_log);
+}
+
+void memilah(char *nama, char *film) {
+    char *dest_dir, *folder;
+    if (strstr(film, "horror")){
+        dest_dir = A_horror;
+        folder = "FilmHorror";
+    } 
+    
+    else if (strstr(film, "animasi")) {
+        dest_dir = A_animasi;
+        folder = "FilmAnimasi";
+    } 
+    
+    else if (strstr(film, "drama")) {
+        dest_dir = A_drama;
+        folder = "FilmDrama";
+    }
+
+    char src[256], dst[256];
+    sprintf(src, "%s/%s", source_f, film);
+    sprintf(dst, "%s/%s", dest_dir, film);
+
+    if (rename(src, dst) == 0) write_log(nama, film, folder);
+}
+
+void *trabowo(void *arg) {
+    for (int i = 0; i < (idx/2); i++) {
+        pthread_mutex_lock(&mutex_turn);
+        while (giliran != 0) pthread_cond_wait(&cond_turn, &mutex_turn);
+
+        memilah("Trabowo", poster[i]);
+
+        giliran = 1;
+        pthread_cond_signal(&cond_turn);
+        pthread_mutex_unlock(&mutex_turn);
+    }
+}
+
+void *peddy(void *arg) {
+    for (int i = idx - 1; i >= idx/2; i--) {
+        pthread_mutex_lock(&mutex_turn);
+        while (giliran != 1) pthread_cond_wait(&cond_turn, &mutex_turn);
+
+        memilah("Peddy", poster[i]);
+
+        giliran = 0;
+        pthread_cond_signal(&cond_turn);
+        pthread_mutex_unlock(&mutex_turn);
+    }
+}
+
+void hitung(){
+    FILE *total;
+    int hor, ani, dr;
+    hor = ani = dr = 0;
+
+    for(int i = 0; i < idx; i++){
+        if (strstr(poster[i], "horror")) hor++;
+        else if (strstr(poster[i], "animasi")) ani++;
+        else if (strstr(poster[i], "drama")) dr++;
+    }
+
+    total = fopen("total.txt", "w");
+    fprintf(total, "Jumlah film horror: %d\n", hor);
+    fprintf(total, "Jumlah film animasi: %d\n", ani);
+    fprintf(total, "Jumlah film drama: %d\n", dr);
+
+    if (hor > ani && hor > dr) fprintf(total, "Genre dengan jumlah film terbanyak: Horror\n");
+
+    else if (ani > hor && ani > dr) fprintf(total, "Genre dengan jumlah film terbanyak: Animasi\n");
+
+    else fprintf(total, "Genre dengan jumlah film terbanyak: Drama\n");
+
+    fclose(total);
+}
+
+
+int main() {
+    DIR *dir = opendir(source_f);
+    struct dirent *file;
+    
+    while ((file = readdir(dir)) != NULL) {
+        if (strstr(file->d_name, ".jpg")) {
+            poster[idx] = strdup(file->d_name);
+            idx++;
+        }
+    }    
+    
+    closedir(dir);
+
+    qsort(poster, idx, sizeof(char*), sort);
+
+    mkdir(A_horror,  0777);
+    mkdir(A_animasi, 0777);
+    mkdir(A_drama,   0777);
+
+    FileLog = fopen("recap.txt", "a");
+
+    pthread_t th0, th1;
+    pthread_create(&th0, NULL, trabowo, NULL);
+    pthread_create(&th1, NULL, peddy,   NULL);
+    pthread_join(th0, NULL);
+    pthread_join(th1, NULL);
+
+    hitung();
+    fclose(FileLog);
+
+    printf("Semua film telah berhasil di sortir\n");
+
+    return 0;
+}
+```
+
+1. Variabel global untuk menyimpan lokasi folder hasil sortir tiap genre, dan lokasi folder asal film
+```sh
+char *A_horror  = "/home/berwyn/Sistem Operasi/film/FilmHorror";
+char *A_animasi = "/home/berwyn/Sistem Operasi/film/FilmAnimasi";
+char *A_drama   = "/home/berwyn/Sistem Operasi/film/FilmDrama";
+char *source_f = "/home/berwyn/Sistem Operasi/film";
+```
+
+2. Array dan variable global untuk daftar film dan sinkronisasi
+```sh
+FILE *FileLog;
+char *poster[51];
+int idx = 0, giliran = 0; 
+
+pthread_mutex_t mutex_turn = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  cond_turn  = PTHREAD_COND_INITIALIZER; 
+pthread_mutex_t mutex_log = PTHREAD_MUTEX_INITIALIZER;
+```
+
+- ***poster[]** -> array untuk menyimpan film
+- **idx** -> jumlah film
+- **giliran** -> menandai giliran antarthread
+- **mutex_turn, cond_turn** -> untuk mengatur thread supaya bekerja secara bergantian
+- **mutex_log** -> untuk penulisan log
+
+3. Mengambil angka dari nama file untuk disorting
+```sh
+int get_index(char *name) {
+    int temp_idx = 0;
+    while (*name && *name != '_') {
+        if (*name >= '0' && *name <= '9'){
+            temp_idx = temp_idx * 10 + (*name - '0');
+        }
+        name++;
+    }
+    return temp_idx;
+}
+```
+- **temp_idx** -> menyimpan angka urutan film untuk nantinya direturn
+- **while (*name && *name != `'_'`)** -> membaca semua angka yang ada di file film hingga karakter '_'
+- **if (name >= '0' && *name <= '9')** -> memeriksa apakah karakter yang ditunjuk oleh pointer adalah sebuah angka
+- **temp_idx = temp_idx * 10 + (*name - '0')** -> mengubah karakter menjadi bentuk angka dan disimpan ke dalam variabel "temp_idx"
+- **name++** -> menggeser pointernya ke karakter berikutnya
+- **return temp_idx;** -> return nilai angka urutan film
+
+4. Melakukan sort menggunakan quicksort
+```sh
+int sort(const void *a, const void *b) {
+    char *fa = *(char **)a;
+    char *fb = *(char **)b;
+    return get_index(fa) - get_index(fb);
+}
+```
+- **char *fa = *(char ** )a** -> mengambil isi dari array `poster` dan disimpan ke dalam 'fa'
+- **char *fb = *(char ** )b** -> mengambil isi dari array "poster" dan disimpan ke dalam 'fb'
+- **return get_index(fa) - get_index(fb);** -> memanggil fungsi `get_index()` untuk mendapatkan angka urutan file, dan mengembalikan hasil selisih dari kedua angka urutan file itu
+
+Apabila hasilnya + maka fa dipindah ke kanan fb, karena fa > fb
+Apabila hasilnya - maka fa dipindah ke kiri fb, karena fa < fb
+
+5. Menulis log pemindahan film
+```sh
+void write_log(char *nama, char *film, char *folder) {
+    time_t waktu = time(NULL);
+    struct tm time = *localtime(&waktu);
+    char simpanWaktu[64];
+    strftime(simpanWaktu, sizeof(simpanWaktu), "%d-%m-%Y %H:%M:%S", &time);
+
+    pthread_mutex_lock(&mutex_log);
+
+    fprintf(FileLog, "[%s] %s: %s telah dipindahkan ke %s\n", simpanWaktu, nama, film, folder);
+    
+    pthread_mutex_unlock(&mutex_log);
+}
+```
+
+- **time_t waktu = time(NULL)** -> mengambil waktu saat program ini dijalankan dalam format `time_t`
+- **struct tm time = *localtime(&waktu);** -> merubah formatnya menjadi struktur `struct tm` agar bisa membaca tanggal
+- **char simpanWaktu[64];** -> array untuk menyimpan waktu dalam bentuk string
+- **strftime(simpanWaktu, sizeof(simpanWaktu), "%d-%m-%Y %H:%M:%S", &time);** -> mengubah waktu yang disimpan di variable `time` menjadi bentuk string yang kemudian akan disimpan di array `simpanWaktu` dengan format tanggal-bulan-tahun jam:menit:detik
+- **pthread_mutex_lock(&mutex_log);** -> mengunci mutexnya supaya tidak ada thread lain yang menulis log di `FileLog`
+- **fprintf(FileLog, "[%s] %s: %s telah dipindahkan ke %s\n", simpanWaktu, nama film, folder);** -> menulis ke dalam `FileLog`dengan format [waktu] oleh_siapa: film_apa telah dipindahkan ke folder_mana
+- **pthread_mutex_unlock(&mutex_log);** -> membuka kembali mutexnya saat sudah selesai
+
+6. Mengelompokkan film berdasarkan genre
+```sh
+void memilah(char *nama, char *film) {
+    char *dest_dir, *folder;
+    if (strstr(film, "horror")){
+        dest_dir = A_horror;
+        folder = "FilmHorror";
+    } 
+    
+    else if (strstr(film, "animasi")) {
+        dest_dir = A_animasi;
+        folder = "FilmAnimasi";
+    } 
+    
+    else if (strstr(film, "drama")) {
+        dest_dir = A_drama;
+        folder = "FilmDrama";
+    }
+
+    char src[256], dst[256];
+    sprintf(src, "%s/%s", source_f, film);
+    sprintf(dst, "%s/%s", dest_dir, film);
+
+    if (rename(src, dst) == 0) write_log(nama, film, folder);
+}
+```
+
+- ***dest_dir, *folder** -> variable untuk menyimpan alamat folder tujuan pemindahan dan nama folder yang akan dicatat di log
+
+- **if (strstr(film, "horror"))** -> memeriksa apakah film yang sedang diproses saat ini adalah film horror
+- **dest_dir = A_horror;** -> memasukkan path folder tujuannya ke folder film horror
+- **folder = "FilmHorror";** -> mengubah folder tempat disimpannya ke folder film horror
+
+- **if (strstr(film, "animasi"))** -> memeriksa apakah film yang sedang diproses saat ini adalah film animasi
+- **dest_dir = A_animasi;** -> memasukkan path folder tujuannya ke folder film animasi
+- **folder = "FilmAnimasi";** -> mengubah folder tempat disimpannya ke folder film animasi
+
+- **if (strstr(film, "drama"))** -> memeriksa apakah film yang sedang diproses saat ini adalah film drama
+- **dest_dir = A_drama;** -> memasukkan path folder tujuannya ke folder film drama
+- **folder = "FilmDrama";** -> mengubah folder tempat disimpannya ke folder film drama
+
+- **char src[256], dst[256]** -> array untuk menyimpan path file sumber dan file tujuan
+- **sprintf(src, "%s/%s", source_f, film)** -> membuat path untuk lokasi awal file dan menyimpannya ke array `src`
+- **sprintf(dst, "%s/%s", dest_dir, film)** -> membuat path untuk lokasi file tujuan dan menyimpannya ke array `dst`
+- **if (rename(src, dst) == 0) write_log(nama, film, folder);** -> memindahkan file dari `src` ke `dst`, jika berhasil maka akan menuliskan lognya menggunakan fungsi `write_log`
+
+
+7. Thread prabowo yang memproses file dari awal
+```sh
+void *trabowo(void *arg) {
+    for (int i = 0; i < (idx/2); i++) {
+        pthread_mutex_lock(&mutex_turn);
+        while (giliran != 0) pthread_cond_wait(&cond_turn, &mutex_turn);
+
+        memilah("Trabowo", poster[i]);
+
+        giliran = 1;
+        pthread_cond_signal(&cond_turn);
+        pthread_mutex_unlock(&mutex_turn);
+    }
+}
+```
+- **`for (int i = 0; i < (idx/2); i++)`** -> loop untuk memproses file film dari awal
+- **pthread_mutex_lock(&mutex_turn)** -> mengunci mutexnya supaya hanya ada satu thread yang berjalan
+- **while (giliran != 0) pthread_cond_wait(&cond_turn, &mutex_turn);** -> memeriksa apakah sekarang adalah giliran thread ini berjalan, apabila bukan maka thread akan menunggu hingga thread lain selesai dan memberikan sinyal untuk thread ini berjalan
+- **memilah("Trabowo", poster[i]);** -> memanggil fungsi `memilah` untuk memindahkan file ke folder yang sesuai dengan genre filmnya dan menandai film ini diproses oleh trabowo
+- **giliran = 1** -> mengubah giliran menjadi 1 supaya thread lain bisa berjalan
+- **pthread_cond_signal(&cond_turn)** -> mengirim sinyal ke thread lain untuk bisa berjalan
+- - **pthread_mutex_unlock(&mutex_log);** -> membuka kembali mutexnya saat sudah selesai
+
+
+8. Thread peddy yang memproses file dari akhir
+```sh
+void *peddy(void *arg) {
+    for (int i = idx - 1; i >= idx/2; i--) {
+        pthread_mutex_lock(&mutex_turn);
+        while (giliran != 1) pthread_cond_wait(&cond_turn, &mutex_turn);
+
+        memilah("Peddy", poster[i]);
+
+        giliran = 0;
+        pthread_cond_signal(&cond_turn);
+        pthread_mutex_unlock(&mutex_turn);
+    }
+}
+```
+- **for (int i = idx - 1; i >= idx/2; i--)** -> loop untuk memproses file film dari akhir
+- **pthread_mutex_lock(&mutex_turn)** -> mengunci mutexnya supaya hanya ada satu thread yang berjalan
+- **while (giliran != 1) pthread_cond_wait(&cond_turn, &mutex_turn);** -> memeriksa apakah sekarang adalah giliran thread ini berjalan, apabila bukan maka thread akan menunggu hingga thread lain selesai dan memberikan sinyal untuk thread ini berjalan
+- **memilah("Peddy", poster[i]);** -> memanggil fungsi `memilah` untuk memindahkan file ke folder yang sesuai dengan genre filmnya dan menandai film ini diproses oleh peddy
+- **giliran = 0** -> mengubah giliran menjadi 1 supaya thread lain bisa berjalan
+- **pthread_cond_signal(&cond_turn)** -> mengirim sinyal ke thread lain untuk bisa berjalan
+- - **pthread_mutex_unlock(&mutex_log);** -> membuka kembali mutexnya saat sudah selesai
+
+9. Menghitung total film per genre, menentukan genre dengan film terbanyak, dan menulis hasilnya ke dalam total.txt
+```sh
+void hitung(){
+    FILE *total;
+    int hor, ani, dr;
+    hor = ani = dr = 0;
+
+    for(int i = 0; i < idx; i++){
+        if (strstr(poster[i], "horror")) hor++;
+        else if (strstr(poster[i], "animasi")) ani++;
+        else if (strstr(poster[i], "drama")) dr++;
+    }
+
+    total = fopen("total.txt", "w");
+    fprintf(total, "Jumlah film horror: %d\n", hor);
+    fprintf(total, "Jumlah film animasi: %d\n", ani);
+    fprintf(total, "Jumlah film drama: %d\n", dr);
+
+    if (hor > ani && hor > dr) fprintf(total, "Genre dengan jumlah film terbanyak: Horror\n");
+
+    else if (ani > hor && ani > dr) fprintf(total, "Genre dengan jumlah film terbanyak: Animasi\n");
+
+    else fprintf(total, "Genre dengan jumlah film terbanyak: Drama\n");
+
+    fclose(total);
+}
+```
+- **FILE *total** -> pointer file untuk file total.txt
+- **int hor, ani, dr;** -> inisialisasi variable untuk menyimpan jumlah film tiap genre
+- **hor = ani = dr = 0** -> variable di set nilai awalnya 0
+- **`for(int i = 0; i < idx; i++)`** -> loop untuk menghitung jumlah film tiap genre
+- **if (strstr(poster[i], "horror")) hor++** -> jika film adalah film horror, maka jumlah film horror bertambah
+- **else if (strstr(poster[i], "animasi")) ani++** -> jika film adalah film animasi, maka jumlah film animasi bertambah
+- **else if (strstr(poster[i], "drama")) dr++** -> jika film adalah film drama, maka jumlah film drama bertambah
+- **total = fopen("total.txt", "w")** -> membuat dan membuka file total.txt jika blm ada
+- **fprintf(total, "Jumlah film horror: %d\n", hor)** -> menulis jumlah film horror ke dalam total.txt
+- **fprintf(total, "Jumlah film animasi: %d\n", ani)** -> menulis jumlah film animasi ke dalam total.txt
+- **fprintf(total, "Jumlah film drama: %d\n", dr))** -> menulis jumlah film horror ke dalam total.txt
+- **if (hor > ani && hor > dr) fprintf(total, "Genre dengan jumlah film terbanyak: Horror\n")** -> memeriksa apakah genre horror memiliki film paling banyak, jika iya maka tulis di program
+- **else if (ani > hor && ani > dr) fprintf(total, "Genre dengan jumlah film terbanyak: Animasi\n")** -> memeriksa apakah genre animasi memiliki film paling banyak, jika iya maka tulis di program
+- **else fprintf(total, "Genre dengan jumlah film terbanyak: Drama\n")** -> jika bukan kedua genre diatas, maka genre film drama lah yang memiliki jumlah film paling banyak
+- **fclose(total)** -> tutup file total.txt apabila sudah selesai
+
+
+10. Fungsi main
+```sh
+int main() {
+    DIR *dir = opendir(source_f);
+    struct dirent *file;
+    
+    while ((file = readdir(dir)) != NULL) {
+        if (strstr(file->d_name, ".jpg")) {
+            poster[idx] = strdup(file->d_name);
+            idx++;
+        }
+    }    
+    
+    closedir(dir);
+
+    qsort(poster, idx, sizeof(char*), sort);
+
+    mkdir(A_horror,  0777);
+    mkdir(A_animasi, 0777);
+    mkdir(A_drama,   0777);
+
+    FileLog = fopen("recap.txt", "a");
+
+    pthread_t th0, th1;
+    pthread_create(&th0, NULL, trabowo, NULL);
+    pthread_create(&th1, NULL, peddy,   NULL);
+    pthread_join(th0, NULL);
+    pthread_join(th1, NULL);
+
+    hitung();
+    fclose(FileLog);
+
+    printf("Semua film telah berhasil di sortir\n");
+
+    return 0;
+}
+```
+
+- **IR *dir = opendir(source_f)** -> membuka direktori penyimpanan file film
+- **struct dirent *file** -> pointer untuk mennyimpan nama file dari dalam direktori
+- **while ((file = readdir(dir)) != NULL)** -> membaca setiap data dari dalam direktori
+- **if (strstr(file->d_name, ".jpg"))** -> jika file di dalam direktori yang sedang dibuka berformat jpg (di nama filenya ada .jog)
+- **poster[idx] = strdup(file->d_name)** -> maka simpan nama file itu ke dalam array poster
+- **idx++** -> increment indexnya
+- **closedir(dir)** -> tutup direktorinya saat sudah selesai dibaca
+- **qsort(poster, idx, sizeof(char*), sort)** -> mengurutkan data yang ada di dalam array poster secara ascending
+- **mkdir(A_horror,  0777); mkdir(A_animasi, 0777); mkdir(A_drama,   0777);** -> membuat direktori baru untuk setiap genre film
+- **FileLog = fopen("recap.txt", "a")** -> membuka file recap.txt
+
+```c
+    pthread_t th0, th1;
+    pthread_create(&th0, NULL, trabowo, NULL);
+    pthread_create(&th1, NULL, peddy,   NULL);
+    pthread_join(th0, NULL);
+    pthread_join(th1, NULL);
+```
+-> membuat dan menjalankan thread untuk memilah film
+
+- **hitung()** -> memanggil fungsi hitung
+- **fclose(FileLog)** -> menutup file recap.txt
+- **printf("Semua film telah berhasil di sortir\n")** -> mmenampilkan pesan bahwa proses penyortiran telah berhasil
+- **return 0** -> menghentikan program
+
+11. Hasil run program
+ 
+![image](https://github.com/user-attachments/assets/90bf415a-170b-4821-a482-cc50874822a6)
+![image](https://github.com/user-attachments/assets/cee1e8ba-4829-4e5b-9b80-40ce035818e0)
+![image](https://github.com/user-attachments/assets/7baae72e-2bcd-4acd-8c9a-10aa863079fb)
+![image](https://github.com/user-attachments/assets/62b5481b-2717-49e2-a6ae-9352e2fb15f9)
+![image](https://github.com/user-attachments/assets/2abfeb9c-c0d1-4e30-9d4e-59881020bd84)
+![image](https://github.com/user-attachments/assets/8321bb01-f7e7-42b7-b41d-aeb9bb68b2d9)
+
+## **d. Pengarsipan Film**
+
+Pada soal ini, folder-folder hasil penyortiran berdasarkan genre kita arsipkan kembali menjadi format .zip untuk menghemat ruang penyimpanan
+
+### Kode
+
+```sh
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+    char *A_horror = "/home/berwyn/Sistem Operasi/film/FilmHorror";
+    char *A_animasi = "/home/berwyn/Sistem Operasi/film/FilmAnimasi";
+    char *A_drama = "/home/berwyn/Sistem Operasi/film/FilmDrama";
+    char *output_f = "/home/berwyn/Sistem Operasi/film/Sortir Film.zip"; 
+    
+    pid_t child;
+    child = fork();
+    if (child == 0) execlp("/usr/bin/zip", "zip", "-rm", output_f, A_horror, A_animasi, A_drama, NULL);
+    
+    else {
+        int status;
+        wait(&status);
+
+        if (WIFEXITED(status)) printf("\nBerhasil mengarsipkan dan menghapus folder.\n");
+    }
+}
+
+```
+
+1. Membuat variable untuk menyimpan path ke folder hasil sortir tiap genre, dan path ke direktori hasil pengarsipan 
+```sh
+char *A_horror = "/home/berwyn/Sistem Operasi/film/FilmHorror";
+char *A_animasi = "/home/berwyn/Sistem Operasi/film/FilmAnimasi";
+char *A_drama = "/home/berwyn/Sistem Operasi/film/FilmDrama";
+char *output_f = "/home/berwyn/Sistem Operasi/film/Sortir Film.zip"; 
+```
+
+2. Membuat proses baru dan menjalankan child process untuk melakukan pengarsipan dan penghapusan folder
+```sh
+pid_t child;
+child = fork();
+
+if (child == 0) execlp("/usr/bin/zip", "zip", "-rm", output_f, A_horror, A_animasi, A_drama, NULL);
+```
+
+- **if (child == 0)** -> jika child = 0 (child process sedang berjalan), maka jalankan bagian selanjutnya
+- **execlp("/usr/bin/zip", "zip"** -> mencari program zip dan menjalankannya (mengarsipkan folder ke format .zip)
+- **"-rm"** -> menghapus folder beserta isinya setelah selesai diarsipkan
+- **output_f** -> alamat tempat menyimpan file hasil proses pengarsipan
+- **A_horror** -> alamat folder film horror
+- **A_animasi** -> alamat folder film animasi
+- **A_drama** -> alamat folder film drama
+- **NULL** -> penanda akhir argumen
+
+3. Parent process untuk memberikan output apabila berhasil melakukan pengarsipan
+```sh
+else {
+    int status;
+    wait(&status);
+
+    if (WIFEXITED(status)) printf("\nBerhasil mengarsipkan dan menghapus folder.\n");
+}
+```
+
+- **status** -> variabel yang menyimpan status dari child process
+- **wait(&status)** -> menunggu child process sampai selesai
+- **if (WIFEXITED(status))** -> percabangan untuk memeriksa apakah child process berjalan dengan normal
+- **printf("\nBerhasil mengarsipkan dan menghapus folder.\n");** -> menampilkan pesan bahwa proses pengarsipan sudah berhasil
+
+4. Hasil run program
+![image](https://github.com/user-attachments/assets/133a8656-1097-4497-bad5-470e798389ab)
+
+![image](https://github.com/user-attachments/assets/50425b4c-4a8e-41d4-ae5a-fb434bbd9c54)
+
+![image](https://github.com/user-attachments/assets/c85f7f47-b29f-46d2-b5b3-a586c0cf8ef8)
 
 ## Task 2 (Reza)
 
