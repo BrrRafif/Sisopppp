@@ -1150,7 +1150,8 @@ void* delete_zip(void* argv) {
 
 4. Isi file netflixData.csv.
 
-![alt text](<Screenshot from 2025-04-28 22-05-33.png>)
+![Screenshot from 2025-04-30 20-06-09](https://github.com/user-attachments/assets/988327b9-de54-4055-bfda-b2f0db3f5d81)
+
 
 ### **b. Sorting Like a Pro**
 
@@ -1376,6 +1377,15 @@ void group_movies() {
 
 6. Hasil dari sorting.
 
+![Screenshot from 2025-04-30 20-08-00](https://github.com/user-attachments/assets/4df6253b-c09f-4a73-9cee-661f6ef6ff2a)
+
+![Screenshot from 2025-04-30 20-08-22](https://github.com/user-attachments/assets/658182d3-5905-4420-adf0-a593286ef7c9)
+
+
+7. Isi log.txt.
+
+![Screenshot from 2025-04-30 20-08-35](https://github.com/user-attachments/assets/38e56f25-f82d-444a-810b-42e5a2a6da33)
+
 ### **c. The Ultimate Movie Report**
 
 Pada soal ini kita diminta untuk melakukan sorting film berdasarkan tahun rilis dan juga mengelompokkan film tersebut dengan format **`report_ddmmyyyy.txt`**. Membuat menu untuk melakukan download, pengelompokkan film, dan membuat report.
@@ -1514,7 +1524,9 @@ while (1) {
 - **case 2** -> Dibuat untuk mengelompokkan film.
 - **case 3** -> Dibuat untuk membuat report.
 
-3. Hasil dari sorting.
+3. Isi dalam file report.
+
+![Screenshot from 2025-04-30 20-10-32](https://github.com/user-attachments/assets/4bc288d8-7352-4778-a701-39cf3f6bbf0c)
 
 ## Task 3 (Agil)
 #### Kode
@@ -2476,3 +2488,165 @@ Dan akan menunggu loadbalancer hingga ready, serta langsung menulis pada sistem.
 ![image](https://github.com/user-attachments/assets/9a381ad9-be6e-458f-be1b-b6dfb897d947)
 
 
+### **b. Load Balancer Mendistribusikan Pesan ke Worker Secara Round-Robin** (Reza)
+
+Pada soal ini kita diminta untuk mendistribusikan pesan ke beberapa **worker** menggunakan **IPC** dan menggunakan metode **round-robin** dan mencatat ke `sistem.log`.
+
+1. Inialisasi Shared Memory.
+
+```c
+
+void init_shared_memory() {
+    int shmid = shmget(SHM_KEY, sizeof(SharedData), 0666|IPC_CREAT);
+    if (shmid == -1) {
+        perror("shmget failed");
+        exit(1);
+    }
+
+    SharedData *data = (SharedData*)shmat(shmid, NULL, 0);
+    if (data == (void*)-1) {
+        perror("shmat failed");
+        exit(1);
+    }
+
+    data->ready_flag = 0;
+    shmdt(data);
+}
+
+```
+
+- **shmget(SHM_KEY, sizeof(SharedData), 0666|IPC_CREAT)** -> Membuat atau mengambil shared memory dengan ukuran sebesar SharedData dan izin akses 0666. Jika belum ada, maka dibuat (IPC_CREAT).
+- **shmat(...)** -> Melampirkan shared memory ke proses agar bisa diakses.
+- **data->ready_flag = 0** -> Menginisialisasi bahwa data belum siap diproses oleh load balancer.
+- **shmdt(data)** -> Melepas shared memory dari proses saat ini.
+
+2. Menulis ke `sistem.log`.
+
+```c
+
+void write_log(const char *entry) {
+    FILE *log_file = fopen("sistem.log", "a");
+    if (log_file == NULL) {
+        perror("Failed to open log file");
+        return;
+    }
+    fprintf(log_file, "%s\n", entry);
+    fclose(log_file);
+}
+
+
+```
+
+- **fopen("sistem.log", "a")** -> Membuka file log sistem.log dalam mode append, agar tidak menimpa isi sebelumnya.
+- **fprintf(..., "%s\n", entry)** -> Menulis pesan log ke dalam file.
+- **fclose(log_file)** -> Menutup file setelah menulis.
+
+3. Distribusi Pesan ke Worker Secara Round-Robin.
+
+```c
+
+void distribute_messages(int num_workers) {
+    int shmid = shmget(SHM_KEY, sizeof(SharedData), 0666);
+    SharedData *data = (SharedData*)shmat(shmid, NULL, 0);
+
+    int msgid = msgget(MSG_KEY, 0666|IPC_CREAT);
+    if (msgid == -1) {
+        perror("msgget failed");
+        exit(1);
+    }
+
+    int worker_counts[MAX_WORKERS] = {0};
+    char log_entry[100];
+
+```
+
+- **shmget(...)** -> Mengakses kembali shared memory yang sudah dibuat.
+- **msgget(MSG_KEY, 0666|IPC_CREAT)** -> Membuat atau mengakses message queue untuk mengirim pesan ke worker.
+- **worker_counts[]** -> Menyimpan jumlah pesan yang dikirim ke masing-masing worker.
+- **log_entry[]** -> Buffer untuk menulis string log.
+
+```c
+
+while (1) {
+        if (data->ready_flag == 1) {
+            for (int i = 0; i < data->count; i++) {
+                snprintf(log_entry, sizeof(log_entry),
+                         "Received at lb: %s (#message %d)", data->message, i+1);
+                write_log(log_entry);
+
+                int worker = i % num_workers;
+                worker_counts[worker]++;
+
+                Message msg;
+                msg.mtype = 1;
+                strncpy(msg.mtext, data->message, sizeof(msg.mtext));
+                msg.worker_id = worker + 1;
+                msg.is_terminate = 0;
+
+                if (msgsnd(msgid, &msg, sizeof(msg) - sizeof(long), 0) == -1) {
+                    perror("msgsnd failed");
+                }
+            }
+
+            for (int i = 0; i < num_workers; i++) {
+                Message term_msg;
+                term_msg.mtype = 1;
+                term_msg.worker_id = i + 1;
+                term_msg.is_terminate = 1;
+                msgsnd(msgid, &term_msg, sizeof(term_msg) - sizeof(long), 0);
+            }
+
+            for (int i = 0; i < num_workers; i++) {
+                snprintf(log_entry, sizeof(log_entry),
+                         "Worker %d : %d messages", i+1, worker_counts[i]);
+                write_log(log_entry);
+            }
+
+            data->ready_flag = 0;
+        }
+    }
+
+```
+
+- **if (data->ready_flag == 1)** -> Mengecek apakah data di shared memory sudah siap diproses.
+- **snprintf + write_log(...)** -> Menulis log bahwa pesan diterima dan siap diproses.
+- **int worker = i % num_workers** -> Menentukan worker secara bergiliran (round-robin) berdasarkan indeks pesan.
+- **worker_counts[worker]++** -> Menambahkan jumlah pesan yang dikirim ke worker tersebut.
+- **strncpy(msg.mtext, data->message, ...)** -> Menyalin isi pesan dari shared memory ke dalam pesan message queue.
+- **msg.worker_id = worker + 1** -> Menyimpan ID worker tujuan.
+
+4. Main.
+
+```c
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <number_of_workers>\n", argv[0]);
+        exit(1);
+    }
+
+    int num_workers = atoi(argv[1]);
+    if (num_workers <= 0 || num_workers > MAX_WORKERS) {
+        printf("Number of workers must be between 1 and %d\n", MAX_WORKERS);
+        exit(1);
+    }
+
+    init_shared_memory();
+    printf("Load balancer started with %d workers\n", num_workers);
+    printf("Waiting for messages...\n");
+
+    distribute_messages(num_workers);
+
+    return 0;
+}
+
+```
+
+- **argc check** -> Pastikan argumen berisi jumlah worker.
+- **atoi(argv[1])** -> Mengubah argumen string menjadi angka.
+- **init_shared_memory()** -> Menyiapkan shared memory untuk menerima pesan dari client.
+- **distribute_messages(num_workers)** -> Memulai loop load balancer untuk mendistribusi pesan.
+
+5. Setelah run load_balancer.c dan run client.c.
+
+![load_balance](https://github.com/user-attachments/assets/d70ab806-1458-4980-8162-5c38fc1c9a30)
