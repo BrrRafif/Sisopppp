@@ -23,7 +23,7 @@ _One sunny morning, Budiman, an Informatics student, was assigned by his lecture
 
 - **Code:**
 
-  ```bash
+```bash
 1.
 sudo apt -y update
 sudo apt -y install qemu-system build-essential bison flex libelf-dev libssl-dev bc grub-common grub-pc libncurses-dev libssl-dev mtools grub-pc-bin xorriso tmux
@@ -111,7 +111,7 @@ whereis busybox
 
 - **Code:**
 
-  ```sh
+```sh
 1.
 sudo bash
 
@@ -183,7 +183,7 @@ praktikan2:praktikan2
 
 - **Code:**
 
-  ```sh
+```sh
 1.
 openssl passwd -1 password
 
@@ -211,7 +211,6 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
   1. Membuat password dari masing-masing user.
   2. Membuat file passwd didalam etc yang berisikan hasil dari nomor 1.
   3. Membuat file group didalam etc.
-
 
 - **Screenshot:**
 
