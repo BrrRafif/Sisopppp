@@ -254,19 +254,27 @@ praktikan2:praktikan2
 
 - **Code:**
 
-  Di dir lokasi myramdisk
+  Di dir osboot
   ```
-  git clone https://github.com/morisab/budiman-text-editor.git
-  cd budiman-text-editor
-  g++ -static main.cpp -o edit
-  cd ..
-  cp budiman-text-editor/edit myramdisk/bin
+  mkdir -p mylinuxiso/boot/grub
+  cp bzImage mylinuxiso/boot/
+  cp myramdisk.gz mylinuxiso/boot/
+
+  cat > mylinuxiso/boot/grub/grub.cfg << 'EOF'
+  set timeout=5
+  set default=0
+
+  menuentry "MyLinux" {
+    linux /boot/bzImage
+    initrd /boot/myramdisk.gz
+  }
+  EOF
+
+  grub-mkrescue -o mylinux.iso mylinuxiso
   ```
 
 - **Explanation:**
-
-  `git clone https://github.com/morisab/budiman-text-editor.git` = melakukan git clown pada budiman-text-editor.git
-  `g++ -static main.cpp -o edit` = compile main.cpp dengan nama edit untuk melakukan run pada terminal
+  
 
 - **Screenshot:**
 
