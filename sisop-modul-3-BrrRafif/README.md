@@ -1,7 +1,7 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/Eu-CByJh)
 |    NRP     |      Name      |
 | :--------: | :------------: |
-| 5025221000 | Student 1 Name |
+| 5025241051 | Reza Afzaal FT |
 | 5025221000 | Student 2 Name |
 | 5025221000 | Student 3 Name |
 
@@ -23,11 +23,79 @@ _One sunny morning, Budiman, an Informatics student, was assigned by his lecture
 
 - **Code:**
 
-  `put your answer here`
+  ```bash
+1.
+sudo apt -y update
+sudo apt -y install qemu-system build-essential bison flex libelf-dev libssl-dev bc grub-common grub-pc libncurses-dev libssl-dev mtools grub-pc-bin xorriso tmux
+
+2.
+mkdir -p osboot
+cd osboot
+
+3.
+wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.1.tar.xz
+tar -xvf linux-6.1.1.tar.xz
+cd linux-6.1.1
+
+4.
+64-Bit Kernel
+General Setup > Configure standard kernel features > Enable support for printk
+General Setup > Configure standard kernel features > Enable futex support
+General Setup > Initial RAM filesystem and RAM disk (initramfs/initrd) support
+General Setup > Control Group Support
+Enable the block layer > Legacy autoloading support
+Enable the block layer > Partition type > Advanced Partition Selection
+Device Drivers > Character devices > Enable TTY
+Device Drivers > Character devices > Virtio console
+Device Drivers > Character devices > /dev/mem virtual device support
+Device Drivers > Network device support > Virtio Network Driver
+Device Drivers > Serial Ata / Paralel ATA
+Device Drivers > Block Devices > Virtio block driver
+Device Drivers > Block Devices > loopback device support
+Device Drivers > Block Devices > RAM block device support
+Device Drivers > Virtio drivers
+Device Drivers > Virtualization Drivers
+Device Drivers > Generic Driver Options > Maintain a devtmpfs at filesystems
+Device Drivers > Generic Driver Options > Automount devtmpfs at /dev
+Executable file formats > Kernel Support for ELF binaries
+Executable file formats > Kernel Support scripts starting with #!
+File Systems > FUSE support
+File Systems > The extended 3 filesystem
+File Systems > The extended 4 filesystem
+File Systems > Second extended fs support
+File Systems > Virtio Filesystem
+File Systems > Kernel automounter support
+File Systems > Pseudo File Systems > /proc file system support
+File Systems > Pseudo File Systems > sysctl support
+File Systems > Pseudo File Systems > sysfs file system support
+Networking Support > Networking options > Unix domain sockets
+Networking Support > Networking options > TCP/IP Networking
+
+
+make tinyconfig
+make menuconfig
+
+5.
+make -j$(nproc)
+
+6.
+cp arch/x86/boot/bzImage ..
+
+7.
+sudo apt install -y busybox-static
+whereis busybox
+
+```
 
 - **Explanation:**
 
-  `put your answer here`
+  1. Menginstall qemu system.
+  2. Membuat direktori osboot.
+  3. Download dan ekstrak kernel linux.
+  4. Konfigurasi kernel.
+  5. Kompilasi kernel.
+  6. Hasilkan file `bzimage`.
+  7. Instal busybox.
 
 - **Screenshot:**
 
@@ -43,11 +111,53 @@ _One sunny morning, Budiman, an Informatics student, was assigned by his lecture
 
 - **Code:**
 
-  `put your answer here`
+  ```sh
+1.
+sudo bash
+
+2.
+mkdir -p myramdisk/{bin,dev,proc,sys,tmp,sisop,etc,root,home/Budiman,home/guest,home/praktikan1,home/praktikan2}`
+
+3.
+cp -a /dev/null myramdisk/dev
+cp -a /dev/tty* myramdisk/dev
+cp -a /dev/zero myramdisk/dev
+cp -a /dev/console myramdisk/dev
+
+4.
+cp /usr/bin/busybox myramdisk/bin
+cd myramdisk/bin./busybox --install .
+
+5.
+nano init
+
+#!/bin/sh
+/bin/mount -t proc none /proc
+/bin/mount -t sysfs none /sys
+
+while true
+do
+    /bin/getty -L tty1 115200 vt100
+    sleep 1
+done`
+
+6.
+chmod +x init
+
+7.
+find . | cpio -oHnewc | gzip > ../myramdisk.gz
+
+```
 
 - **Explanation:**
 
-  `put your answer here`
+  1. Masuk ke mode superuser.
+  2. Membuat direktori untuk initramfs.
+  3. Salin file device ke direktori dev.
+  4. Salin busybox ke direktori bin.
+  5. Membuat file init.
+  6. Memberikan izin eksekusi pada file init.
+  7. Kompresi dan buat file init.
 
 - **Screenshot:**
 
@@ -73,11 +183,35 @@ praktikan2:praktikan2
 
 - **Code:**
 
-  `put your answer here`
+  ```sh
+1.
+openssl passwd -1 password
+
+2.
+mkdir passwd
+root:<<hasilgeneratorrootpassword>>:0:0:root:/root:/bin/sh
+Budiman:<<hasilgeneratorrootpassword>>:1001:100:user1:/home/Budiman:/bin/sh
+guest:<<hasilgeneratorrootpassword>>:1002:100:user1:/home/guest:/bin/sh
+praktikan1:<<hasilgeneratorrootpassword>>:1003:100:user1:/home/praktikan1:/bin/sh
+praktikan2:<<hasilgeneratorrootpassword>>:1004:100:user1:/home/praktikan2:/bin/sh
+
+3.
+mkdir group
+root:x:0:
+bin:x:1:root
+sys:x:2:root
+tty:x:5:root
+disk:x:6:root
+wheel:x:10:root
+users:x:100:Budiman, guest, praktikan1, praktikan2
+```
 
 - **Explanation:**
 
-  `put your answer here`
+  1. Membuat password dari masing-masing user.
+  2. Membuat file passwd didalam etc yang berisikan hasil dari nomor 1.
+  3. Membuat file group didalam etc.
+
 
 - **Screenshot:**
 
@@ -93,11 +227,13 @@ praktikan2:praktikan2
 
 - **Code:**
 
-  `put your answer here`
+```sh
+  chown 0:0 root
+```
 
 - **Explanation:**
 
-  `put your answer here`
+  1. Mengubah akses root agar hanya bisa diakses oleh root.
 
 - **Screenshot:**
 
