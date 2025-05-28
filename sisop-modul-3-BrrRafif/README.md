@@ -257,7 +257,8 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
 
 - **Screenshot:**
 
-  `put your answer here`
+ 
+![Screenshot from 2025-05-28 18-00-20](https://github.com/user-attachments/assets/87948bbd-61b9-4719-853a-9b07ab69449c)
 
 ### Soal 5
 
