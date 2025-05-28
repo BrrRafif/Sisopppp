@@ -2,8 +2,8 @@
 |    NRP     |      Name      |
 | :--------: | :------------: |
 | 5025241051 | Reza Afzaal FT |
-| 5025221000 | Student 2 Name |
-| 5025221000 | Student 3 Name |
+| 5025241029 | Berwyn Rafif Alvaro |
+| 5025221037 | Agil Lukman Hakim Muchdi |
 
 # Praktikum Modul 3 _(Module 3 Lab Work)_
 
@@ -248,7 +248,8 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
 - **Screenshot:**
 
   1. Isi file passwd.
-  ![Screenshot from 2025-05-28 18-12-59](https://github.com/user-attachments/assets/f3eacb3f-d09b-4771-aa75-492387c13457)
+  ![image](https://github.com/user-attachments/assets/c2a9a1a9-53cb-4457-8ce9-e069e157d555)
+
 
   2. Isi file group.
      
@@ -287,15 +288,31 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
 
 - **Code:**
 
-  `put your answer here`
+  ```sh
+  chown 1001:100 ./Budiman
+  chown 1002:101 ./guest
+  chown 1003:102 ./praktikan1
+  chown 1004:103 ./praktikan2
+
+  chmod 700 ./Budiman
+  chmod 700 ./guest
+  chmod 700 ./praktikan1
+  chmod 700 ./praktikan2
+  chmod 700 ./root
+  ```
 
 - **Explanation:**
 
-  `put your answer here`
+  Membuat agar setiap direktori home milik seorang user tidak bisa diakses oleh user lainnya, dan hanya root yang bisa mengakses direktori home dari tiap user sebagai superuser.
 
 - **Screenshot:**
 
-  `put your answer here`
+  1. Setiap user hanya bisa mengakses dirinya sendiri
+  ![image](https://github.com/user-attachments/assets/d9344a2c-87e6-424d-8c26-ca5c4271e310)
+
+  2. Root sebagai superuser bisa mengakses kemanapun
+  ![image](https://github.com/user-attachments/assets/678d2788-d4ed-4c60-87d1-8e3152841d22)
+
 
 ### Soal 6
 
@@ -307,15 +324,29 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
 
 - **Code:**
 
-  `put your answer here`
+  ```sh
+  nano myramdisk/etc/profile
+  
+  cat << 'EOF'
+  
+  Welcome to OS'25
+  
+  EOF
+  ```
 
 - **Explanation:**
 
-  `put your answer here`
+  Membuat file `profile` di dalam direktori `etc` yang nantinya akan menampilkan kalimat `Welcome to OS'25` secara otomatis setiap kali seorang user melakukan login.
 
 - **Screenshot:**
 
-  `put your answer here`
+  1. Isi file `profile`
+  ![image](https://github.com/user-attachments/assets/9bb13918-66ef-41b7-8314-ff8464f9e3d5)
+
+  2. Banner sambutan saat login
+  ![image](https://github.com/user-attachments/assets/24106d03-d294-4082-89e1-413ba17ae445)
+
+
 
 ### Soal 7
 
@@ -327,15 +358,30 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
 
 - **Code:**
 
-  `put your answer here`
+  ```sh
+  nano myramdisk/etc/profile
+
+  cat << 'EOF'
+  
+  Welcome to OS'25
+  
+  EOF
+
+  echo "Helloo $USER"
+  ```
 
 - **Explanation:**
 
-  `put your answer here`
+  Mengedit file `profile` di direktori `etc` agar setiap kali seorang user melakukan login, sistem operasi akan menampilkan banner `Welcome to OS'25` diikuti dengan kalimat sambutan Helloo <nama_user>, dimana <nama_user> merupakan nama user yang sedang login.
 
 - **Screenshot:**
 
-  `put your answer here`
+  1. Isi file `profile`
+  ![image](https://github.com/user-attachments/assets/92a6c39d-c11f-4f47-a540-960b9f6a0016)
+
+  2. Banner dan kata sambutan saat login
+  ![image](https://github.com/user-attachments/assets/a1538313-2251-4f05-9ab0-067619f7e015)
+
 
 ### Soal 8
 
