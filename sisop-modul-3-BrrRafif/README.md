@@ -403,7 +403,7 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
 
   `git clone https://github.com/morisab/budiman-text-editor.git` = melakukan git clown pada budiman-text-editor.git
 
-  `g++ -static main.cpp -o edit` = compile main.cpp dengan nama edit untuk melakukan run pada terminal
+  `g++ -static main.cpp -o edit` = Compile binary statically linked agar bisa run tanpa dependency dengan nama edit untuk melakukan run pada terminal
 
 - **Screenshot:**
 
