@@ -102,12 +102,17 @@ whereis busybox
 ![installqemu](https://github.com/user-attachments/assets/77f281bb-1d5f-46f1-a1bd-80d4d266c4cf)
 
 2. Membuat dir osboot.
+
 ![mkdirosboot](https://github.com/user-attachments/assets/f6499a18-b0b4-490b-9661-26df6ea6df59)
 
 3. Download dan install linux.
 ![install_linux](https://github.com/user-attachments/assets/60f0f1cf-798b-42eb-aee3-38273fd1a5a0)
 
-4. 
+4. Hasilkan file bzimage.
+![makejs](https://github.com/user-attachments/assets/5198e0c6-49fb-4ebf-9f56-c15b746b4484)
+
+5. Install busybox.
+![installbusybox](https://github.com/user-attachments/assets/8f9276a7-39f2-4e61-afe0-6b82225522cc)
 
 
 
