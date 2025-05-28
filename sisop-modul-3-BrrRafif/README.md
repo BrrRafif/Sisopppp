@@ -368,8 +368,17 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
 
 - **Screenshot:**
 
-  `put your answer here`
+  1. File init
+  ![Screenshot 2025-05-28 135016](https://github.com/user-attachments/assets/13ba2cfa-1910-48ee-81f2-8145d771182a)
 
+  2. File profile
+  ![Screenshot 2025-05-28 135111](https://github.com/user-attachments/assets/071c5f24-7042-420f-92a6-11dd92816ccf)
+
+  3. Code run
+  ![Screenshot 2025-05-28 135530](https://github.com/user-attachments/assets/cb1f405c-28e7-46cf-a531-4f4d8f7b71c9)
+
+  4. Tampilan
+  ![Screenshot 2025-05-28 135555](https://github.com/user-attachments/assets/f80eab24-fb44-42f1-aa8f-71d15791a5ee)
 
 ### Soal 9
 
@@ -398,7 +407,18 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
 
 - **Screenshot:**
 
-  `put your answer here`
+  1. Isi file Budiman setelah dicompile
+     ![Screenshot 2025-05-28 135748](https://github.com/user-attachments/assets/25f3b387-d6ec-4933-befe-f0b2786c12e3)
+     
+  2. Lokasi copy-an di bin
+     ![Screenshot 2025-05-28 135842](https://github.com/user-attachments/assets/bf7625cf-f595-4174-8eef-52ae6c87d1c8)
+     
+  3. Penggunaan
+     ![Screenshot 2025-05-28 140244](https://github.com/user-attachments/assets/fb1dd423-2b24-416e-be38-0d163132bf84)
+     
+- **Kendala**
+  Bisa diketik dan di save serta dilakukan cat tetapi tidak dapat menampilkan ketikan pada text editor
+  ![Screenshot 2025-05-28 140308](https://github.com/user-attachments/assets/990d6cd9-da84-4531-bbba-ba2e217a9f24)
 
 ### Soal 10
 
@@ -417,12 +437,12 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
   cp myramdisk.gz mylinuxiso/boot/
 
   cat > mylinuxiso/boot/grub/grub.cfg << 'EOF'
-  set timeout=5
-  set default=0
+  set timeout=5                  # Tunggu 5 detik input user
+  set default=0                  # Pilih entry pertama secara default
 
-  menuentry "MyLinux" {
-    linux /boot/bzImage
-    initrd /boot/myramdisk.gz
+  menuentry "MyLinux OS" {       # Label yang ditampilkan
+    linux /boot/bzImage        # Path kernel relatif terhadap root ISO
+    initrd /boot/myramdisk.gz  # Path initramfs
   }
   EOF
 
@@ -430,11 +450,25 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
   ```
 
 - **Explanation:**
-  
 
+  `mkdir -p mylinuxiso/boot/grub` = Buat directory ISO
+
+  `cp bzImage mylinuxiso/boot/` = Copy kernel dan initramfs
+
+  `cp myramdisk.gz mylinuxiso/boot/` = Copy binary editor
+
+  `grub-mkrescue` = Membuat ISO dengan bootloader GRUB yang berisi kernel (bzImage), initramfs (myramdisk.gz), dan binary editor (edit).  
+  
 - **Screenshot:**
 
-  `put your answer here`
+  1. File grub.cfg
+  ![Screenshot 2025-05-28 142411](https://github.com/user-attachments/assets/228027ed-0404-4af7-90df-caa2cb7d99c9)
+
+  2. Run `grub-mkrescue -o mylinux.iso mylinuxiso`
+  ![Screenshot 2025-05-28 143526](https://github.com/user-attachments/assets/c5fc7dac-c2f6-4dde-b45d-741eaedea6d0)
+
+  3. Isi file osboot
+  ![Screenshot 2025-05-28 143609](https://github.com/user-attachments/assets/1114a9d1-70cc-460e-91f5-eac85931d360)
 
 ---
 
