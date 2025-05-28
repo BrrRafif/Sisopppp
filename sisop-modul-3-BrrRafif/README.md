@@ -203,8 +203,11 @@ praktikan2:praktikan2
 - **Explanation:**
 
   `-L ttyS0` = Memulai login prompt pada serial console atau terminal asli
+
   `PS1='\[\e[1;32m\]\u@\h:\w\$ \[\e[0m\]` = Untuk mengubah prompt shell menjadi warna hijau
+
   `display gtk` = Menampilkan window GUI QEMU dengan virtual VGA (saat butuh tampilan grafis)
+
   `nographic` = Menonaktifkan output grafis, mengalihkan semua I/O ke console/text
 
 - **Screenshot:**
@@ -234,6 +237,7 @@ praktikan2:praktikan2
 - **Explanation:**
 
   `git clone https://github.com/morisab/budiman-text-editor.git` = melakukan git clown pada budiman-text-editor.git
+
   `g++ -static main.cpp -o edit` = compile main.cpp dengan nama edit untuk melakukan run pada terminal
 
 - **Screenshot:**
