@@ -98,8 +98,22 @@ whereis busybox
   7. Instal busybox.
 
 - **Screenshot:**
+1. Install qemu.
+![installqemu](https://github.com/user-attachments/assets/77f281bb-1d5f-46f1-a1bd-80d4d266c4cf)
 
-  `put your answer here`
+2. Membuat dir osboot.
+![mkdirosboot](https://github.com/user-attachments/assets/f6499a18-b0b4-490b-9661-26df6ea6df59)
+
+3. Download dan install linux.
+![install_linux](https://github.com/user-attachments/assets/60f0f1cf-798b-42eb-aee3-38273fd1a5a0)
+
+
+
+
+
+   
+  
+
 
 ### Soal 2
 
