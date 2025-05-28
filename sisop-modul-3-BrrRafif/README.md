@@ -182,7 +182,19 @@ find . | cpio -oHnewc | gzip > ../myramdisk.gz
 
 - **Screenshot:**
 
-  `put your answer here`
+  1. Membuat direktori initram.
+    
+  ![Screenshot from 2025-05-28 18-08-08](https://github.com/user-attachments/assets/2616bb9b-d801-4d8f-8988-3994a7cdbfce)
+
+  2. Membuat file init.
+     
+  ![Screenshot from 2025-05-28 18-10-25](https://github.com/user-attachments/assets/68281021-a06f-452d-a02e-b0148074aa15)
+
+  3. Memberikan izin eksekusi pada file init.
+     
+  ![Screenshot from 2025-05-28 18-11-38](https://github.com/user-attachments/assets/37b9d5a3-ec85-4441-9b0e-23954cc5be87)
+  
+
 
 ### Soal 3
 
@@ -235,7 +247,12 @@ users:x:100:Budiman, guest, praktikan1, praktikan2
 
 - **Screenshot:**
 
-  `put your answer here`
+  1. Isi file passwd.
+  ![Screenshot from 2025-05-28 18-12-59](https://github.com/user-attachments/assets/f3eacb3f-d09b-4771-aa75-492387c13457)
+
+  2. Isi file group.
+     
+  ![Screenshot from 2025-05-28 18-13-16](https://github.com/user-attachments/assets/2ca57db0-795e-4e78-bb04-13604c78e451)
 
 ### Soal 4
 
