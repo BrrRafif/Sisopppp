@@ -172,16 +172,45 @@ praktikan2:praktikan2
 **Answer:**
 
 - **Code:**
+  
+  di directory myramdisk
+  ```bash
+  nano init
+  !/bin/sh
+  /bin/mount -t proc none /proc
+  /bin/mount -t sysfs none /sys
 
-  `put your answer here`
+  while true
+  do
+    /bin/getty -L ttyS0 115200 vt100
+    sleep 1
+  done
+
+  # lakukan penambahan code pada etc/profile
+  cat >> /etc/profile << 'EOF'
+  export PS1='\[\e[1;32m\]\u@\h:\w\$ \[\e[0m\]'
+  EOF
+  # untuk run gunakan code berikut
+  qemu-system-x86_64 \
+  -smp 2 \
+  -m 256 \
+  -display gtk \
+  -nographic \
+  -kernel bzImage \
+  -initrd myramdisk.gz
+  ```
 
 - **Explanation:**
 
-  `put your answer here`
+  `-L ttyS0` = Memulai login prompt pada serial console atau terminal asli
+  `PS1='\[\e[1;32m\]\u@\h:\w\$ \[\e[0m\]` = Untuk mengubah prompt shell menjadi warna hijau
+  `display gtk` = Menampilkan window GUI QEMU dengan virtual VGA (saat butuh tampilan grafis)
+  `nographic` = Menonaktifkan output grafis, mengalihkan semua I/O ke console/text
 
 - **Screenshot:**
 
   `put your answer here`
+
 
 ### Soal 9
 
@@ -193,11 +222,19 @@ praktikan2:praktikan2
 
 - **Code:**
 
-  `put your answer here`
+  Di dir lokasi myramdisk
+  ```
+  git clone https://github.com/morisab/budiman-text-editor.git
+  cd budiman-text-editor
+  g++ -static main.cpp -o edit
+  cd ..
+  cp budiman-text-editor/edit myramdisk/bin
+  ```
 
 - **Explanation:**
 
-  `put your answer here`
+  `git clone https://github.com/morisab/budiman-text-editor.git` = melakukan git clown pada budiman-text-editor.git
+  `g++ -static main.cpp -o edit` = compile main.cpp dengan nama edit untuk melakukan run pada terminal
 
 - **Screenshot:**
 
@@ -213,11 +250,19 @@ praktikan2:praktikan2
 
 - **Code:**
 
-  `put your answer here`
+  Di dir lokasi myramdisk
+  ```
+  git clone https://github.com/morisab/budiman-text-editor.git
+  cd budiman-text-editor
+  g++ -static main.cpp -o edit
+  cd ..
+  cp budiman-text-editor/edit myramdisk/bin
+  ```
 
 - **Explanation:**
 
-  `put your answer here`
+  `git clone https://github.com/morisab/budiman-text-editor.git` = melakukan git clown pada budiman-text-editor.git
+  `g++ -static main.cpp -o edit` = compile main.cpp dengan nama edit untuk melakukan run pada terminal
 
 - **Screenshot:**
 
