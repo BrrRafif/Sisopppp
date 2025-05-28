@@ -107,6 +107,8 @@ whereis busybox
 3. Download dan install linux.
 ![install_linux](https://github.com/user-attachments/assets/60f0f1cf-798b-42eb-aee3-38273fd1a5a0)
 
+4. 
+
 
 
 
