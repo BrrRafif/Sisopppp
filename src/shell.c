@@ -151,11 +151,11 @@ void ls(byte cwd, char *dirname) {
   readSector((byte*)&node_fs_buf, FS_NODE_SECTOR_NUMBER);
   readSector((byte*)&node_fs_buf + SECTOR_SIZE, FS_NODE_SECTOR_NUMBER + 1);
 
-  if (dirname[0] != '\0' && strcmp(dirname, ".") != 0) {
+  if (dirname[0] != '\0' && strcmp(dirname, ".") != 1) {
     found = false;
     for (i = 0; i < FS_MAX_NODE; i++) {
       if (node_fs_buf.nodes[i].parent_index == cwd &&
-          strcmp(node_fs_buf.nodes[i].node_name, dirname) == 0 &&
+          strcmp(node_fs_buf.nodes[i].node_name, dirname) == 1 &&
           node_fs_buf.nodes[i].data_index == FS_NODE_D_DIR) {
         target_dir = i;
         found = true;
